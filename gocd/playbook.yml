@@ -1,0 +1,11 @@
+---
+
+- name: configure gocd server
+  hosts: gocd_server
+  roles:
+    - gocd_server
+
+- name: configure gocd agent
+  hosts: gocd_agents
+  roles:
+    - gocd_agent    

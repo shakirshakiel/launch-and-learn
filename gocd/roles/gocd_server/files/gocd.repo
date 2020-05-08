@@ -1,0 +1,13 @@
+[gocd]
+name     = GoCD YUM Repository
+baseurl  = https://download.gocd.org
+enabled  = 1
+gpgcheck = 1
+gpgkey   = https://download.gocd.org/GOCD-GPG-KEY.asc
+
+[gocd-experimental]
+name     = GoCD Experimental YUM Repository
+baseurl  = https://download.gocd.org/experimental
+enabled  = 0
+gpgcheck = 1
+gpgkey   = https://download.gocd.org/GOCD-GPG-KEY.asc

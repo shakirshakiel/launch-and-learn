@@ -1,0 +1,67 @@
+- name: Configure gocd repo
+  become: yes
+  copy:
+    dest: /etc/yum.repos.d/gocd.repo
+    src: gocd.repo
+    owner: root
+    group: root
+    mode: 0444
+    
+- name: Install required packages
+  become: yes
+  package:
+    name: 
+      - git
+      - go-agent
+
+- name: Add /etc/hosts entry for gocd server
+  become: yes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      192.168.199.11 gocd.example.com
+
+- name: Add the certificate files for Gocd
+  become: yes
+  copy:
+    dest: '/usr/share/go-agent/{{ item }}'
+    src: '{{ item }}'
+    owner: root
+    group: go
+    mode: '0440'
+  with_items:
+    - gocd.example.com.crt
+    - gocd.example.com.key
+
+- name: Register with go-server
+  become: yes
+  lineinfile:
+    path: /usr/share/go-agent/wrapper-config/wrapper-properties.conf
+    regexp: '^wrapper\.app\.parameter\.101='
+    line: 'wrapper.app.parameter.101=https://gocd.example.com/go'
+    mode: 0644
+
+- name: Configure go agent
+  become: yes
+  blockinfile:
+    path: /usr/share/go-agent/wrapper-config/wrapper-properties.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      wrapper.app.parameter.103=-sslVerificationMode
+      wrapper.app.parameter.104=FULL
+      wrapper.app.parameter.105=-sslCertificateFile
+      wrapper.app.parameter.106=/usr/share/go-agent/gocd.example.com.crt
+      wrapper.app.parameter.107=-sslPrivateKeyFile
+      wrapper.app.parameter.108=/usr/share/go-agent/gocd.example.com.key
+
+
+- name: Restart and enable go-agent service
+  become: yes      
+  systemd:
+    name: go-agent
+    enabled: yes
+    daemon-reload: yes
+    state: restarted      

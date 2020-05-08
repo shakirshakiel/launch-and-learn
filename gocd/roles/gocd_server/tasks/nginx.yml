@@ -1,0 +1,98 @@
+- name: Configure nginx repo
+  become: yes
+  copy:
+    dest: /etc/yum.repos.d/nginx.repo
+    src: nginx.repo
+    owner: root
+    group: root
+    mode: 0444
+
+- name: Install Nginx
+  become: yes
+  package:
+    name: nginx
+    state: present
+
+- name: Find any default server configuration for Nginx
+  become: yes
+  find:
+    paths: /etc/nginx/conf.d/
+    patterns: '*.conf'
+    file_type: file
+  register: nginx_server_confs
+
+- name: Remove any default server configuration for Nginx
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ nginx_server_confs.files }}"
+
+- name: Add the server configuration for Gocd
+  become: yes
+  copy:
+    dest: /etc/nginx/conf.d/gocd-proxy.conf
+    src: gocd-proxy.conf
+    owner: nginx
+    group: nginx
+    mode: '0444'
+
+- name: Setup directories for nginx ssl certificates
+  become: yes
+  file:
+    path: '{{ item }}'
+    owner: root
+    group: root
+    state: directory
+  with_items:
+    - /etc/nginx/ssl
+
+- name: Add the certificate files
+  become: yes
+  copy:
+    dest: '/etc/nginx/ssl/{{ item }}'
+    src: '{{ item }}'
+    owner: root
+    group: root
+    mode: '0400'
+  with_items:
+    - gocd.example.com.crt
+    - gocd.example.com.key
+
+- name: Update the base configuration
+  become: yes
+  replace:
+    path: /etc/nginx/nginx.conf
+    regexp: '^user (.+)$'
+    replace: '#user \1 # the service definition starts the server under the nginx user'
+
+- name: Update the service definition to allow running as a non-root user
+  become: yes
+  blockinfile:
+    path: /usr/lib/systemd/system/nginx.service
+    marker: "# --- {mark} Added by Ansible ---"
+    insertafter: "^(Type|PIDFile|ExecStart|ExecReload|ExecStop|Restart|RestartSec)=.+"
+    block: |
+      User=nginx
+      Group=nginx
+      CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_DAC_OVERRIDE
+      AmbientCapabilities=CAP_NET_BIND_SERVICE CAP_DAC_OVERRIDE
+
+- name: Enable and start the Nginx service
+  become: yes
+  systemd:
+    name: nginx
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: Wait for Nginx to start
+  uri:
+    url: https://127.0.0.1/
+    status_code: 200
+    validate_certs: false # because we are connecting over the lookback IP rather than the DNS name
+  register: result
+  until: result.status == 200
+  when: not ansible_check_mode
+  retries: 5
+  delay: 2

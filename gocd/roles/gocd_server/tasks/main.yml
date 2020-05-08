@@ -1,0 +1,37 @@
+- name: Configure gocd repo
+  become: yes
+  copy:
+    dest: /etc/yum.repos.d/gocd.repo
+    src: gocd.repo
+    owner: root
+    group: root
+    mode: 0444
+    
+- name: Install required packages
+  become: yes
+  package:
+    name: 
+      - git
+      - go-server
+      
+- name: Restart and enable go-server service
+  become: yes      
+  systemd:
+    name: go-server
+    enabled: yes
+    daemon-reload: yes
+    state: restarted
+
+- name: Wait for the GoCD server to start
+  uri:
+    url: http://127.0.0.1:8153/go/pipelines
+    follow_redirects: yes
+    status_code: 200
+    validate_certs: false
+  register: result
+  until: result.status == 200
+  when: not ansible_check_mode
+  retries: 30
+  delay: 2
+
+- include: nginx.yml
