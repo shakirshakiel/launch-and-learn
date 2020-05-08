@@ -56,7 +56,17 @@
       wrapper.app.parameter.106=/usr/share/go-agent/gocd.example.com.crt
       wrapper.app.parameter.107=-sslPrivateKeyFile
       wrapper.app.parameter.108=/usr/share/go-agent/gocd.example.com.key
+      wrapper.app.parameter.109=-rootCertFile
+      wrapper.app.parameter.110=/usr/share/go-agent/gocd.example.com.crt
 
+- name: Auto-register go agent
+  become: yes
+  copy:
+    dest: '/var/lib/go-agent/config/autoregister.properties'
+    src: 'autoregister.properties'
+    owner: go
+    group: go
+    mode: '0644'
 
 - name: Restart and enable go-agent service
   become: yes      
