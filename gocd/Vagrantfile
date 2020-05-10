@@ -20,11 +20,21 @@ Vagrant.configure("2") do |config|
   config.vm.define "agent1" do |agent1|
     agent1.vm.box = "shakirshakiel/centos_docker"
     agent1.vm.provider "virtualbox" do |vb|
-      vb.memory = 2048
-      vb.cpus = 2
+      vb.memory = 1024
+      vb.cpus = 1
     end  
     agent1.vm.box_version = "19.03.1"
     agent1.vm.network "private_network", ip: "192.168.199.12"
+  end
+
+  config.vm.define "agent2" do |agent2|
+    agent2.vm.box = "shakirshakiel/centos_docker"
+    agent2.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end  
+    agent2.vm.box_version = "19.03.1"
+    agent2.vm.network "private_network", ip: "192.168.199.13"
   end
 
 end
