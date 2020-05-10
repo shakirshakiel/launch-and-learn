@@ -14,15 +14,7 @@
       - git
       - go-server
       - python-lxml
-
-- name: Add auto-registration key
-  become: yes
-  xml:
-    path: "/etc/go/cruise-config.xml"
-    xpath: "/cruise/server"
-    attribute: "agentAutoRegisterKey"
-    value: "388b633a88de126531afa41eff9aa69e"
-      
+    
 - name: Restart and enable go-server service
   become: yes      
   systemd:
@@ -43,4 +35,5 @@
   retries: 30
   delay: 2
 
+- include: cruise-config.yml
 - include: nginx.yml

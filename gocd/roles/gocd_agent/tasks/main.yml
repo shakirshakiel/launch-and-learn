@@ -59,6 +59,15 @@
       wrapper.app.parameter.109=-rootCertFile
       wrapper.app.parameter.110=/usr/share/go-agent/gocd.example.com.crt
 
+- name: Setup config directory for gocd agent
+  become: yes
+  file:
+    path: '/var/lib/go-agent/config'
+    owner: go
+    group: go
+    mode: '0755'
+    state: directory
+
 - name: Auto-register go agent
   become: yes
   copy:
