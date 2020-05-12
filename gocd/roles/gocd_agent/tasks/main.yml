@@ -21,6 +21,14 @@
     name: 
       - jq
 
+- name: Install yq
+  become: yes
+  get_url:
+    url: https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64
+    dest: /usr/local/bin/yq
+    checksum: "sha256:e70e482e7ddb9cf83b52f5e83b694a19e3aaf36acf6b82512cbe66e41d569201"
+    mode: 0755
+
 - name: Add /etc/hosts entry for gocd server
   become: yes
   blockinfile:
