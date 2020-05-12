@@ -13,6 +13,13 @@
     name: 
       - git
       - go-agent
+      - epel-release
+
+- name: Install jq
+  become: yes
+  package:
+    name: 
+      - jq
 
 - name: Add /etc/hosts entry for gocd server
   become: yes
