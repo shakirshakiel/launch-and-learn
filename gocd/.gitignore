@@ -2,3 +2,5 @@
 *.crt
 .vagrant
 .DS_Store
+id_rsa
+id_rsa.pub

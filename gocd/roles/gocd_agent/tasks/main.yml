@@ -99,3 +99,12 @@
     enabled: yes
     daemon-reload: yes
     state: restarted      
+
+- name: Add ssh key to go user
+  become: yes
+  copy:
+    dest: /var/go/.ssh/id_rsa
+    src: id_rsa
+    owner: go
+    group: go
+    mode: 0600
