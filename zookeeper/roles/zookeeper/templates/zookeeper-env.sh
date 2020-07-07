@@ -1,0 +1,2 @@
+export ZK_SERVER_HEAP=2048
+export SERVER_JVMFLAGS="-Xms512m"

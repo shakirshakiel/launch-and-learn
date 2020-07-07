@@ -1,0 +1,69 @@
+- name: Setup data directory for zookeeper
+  become: yes
+  file:
+    path: "{{ ZOOKEEPER_DATADIR }}"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0755"
+    state: directory
+
+- name: Setup log directory for zookeeper
+  become: yes
+  file:
+    path: "{{ ZOOKEEPER_LOGDIR }}"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0755"
+    state: directory
+
+- name: Setup myid file for zookeeper
+  become: yes
+  template:
+    dest: "{{ ZOOKEEPER_DATADIR }}/myid"
+    src: "myid"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0644"
+
+- name: Configure zookeeper
+  become: yes
+  template:
+    dest: "{{ ZOOKEEPER_DIR }}/conf/zoo.cfg"
+    src: "zoo.cfg"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0644"
+
+- name: Configure env variables for zookeeper
+  become: yes
+  template:
+    dest: "{{ ZOOKEEPER_DIR }}/conf/zookeeper-env.sh"
+    src: "zookeeper-env.sh"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0644"
+
+- name: Copy service file
+  become: yes
+  template:
+    dest: "/usr/lib/systemd/system/zookeeper.service"
+    src: "zookeeper.service"
+    mode: "0644"
+
+- name: Add /etc/hosts entry for zookeeper
+  become: yes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# --- {mark} Added by Ansible --- {{ item }}"
+    insertbefore: "EOF"
+    block: |
+      {{ hostvars[item]['ansible_host']  }} {{ item }}
+  with_items: "{{ groups['zookeeper'] }}"
+
+- name: Enable and start the Nginx service
+  become: yes
+  systemd:
+    name: zookeeper
+    daemon_reload: yes
+    enabled: yes
+    state: started

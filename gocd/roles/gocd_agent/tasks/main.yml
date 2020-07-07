@@ -100,6 +100,15 @@
     daemon-reload: yes
     state: restarted      
 
+- name: Create ssh directory for go
+  become: yes
+  file:
+    path: '/var/go/.ssh'
+    owner: go
+    group: go
+    mode: '0755'
+    state: directory
+
 - name: Add ssh key to go user
   become: yes
   copy:

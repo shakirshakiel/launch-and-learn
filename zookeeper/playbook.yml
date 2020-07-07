@@ -1,0 +1,6 @@
+---
+
+- name: configure zookeeper ensemble
+  hosts: zookeeper
+  roles:
+    - zookeeper

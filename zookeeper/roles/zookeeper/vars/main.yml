@@ -1,0 +1,6 @@
+USER: vagrant
+GROUP: vagrant
+ZOOKEEPER_DIR: /home/vagrant/apache-zookeeper-3.6.1-bin
+ZOOKEEPER_BINDIR: /home/vagrant/apache-zookeeper-3.6.1-bin/bin
+ZOOKEEPER_DATADIR: /home/vagrant/zookeeper-data
+ZOOKEEPER_LOGDIR: /home/vagrant/zookeeper-logs
