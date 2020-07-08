@@ -60,10 +60,10 @@
       {{ hostvars[item]['ansible_host']  }} {{ item }}
   with_items: "{{ groups['zookeeper'] }}"
 
-- name: Enable and start the Nginx service
+- name: Enable and start the zookeeper service
   become: yes
   systemd:
     name: zookeeper
     daemon_reload: yes
     enabled: yes
-    state: started
+    state: restarted
