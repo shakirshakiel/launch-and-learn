@@ -28,8 +28,17 @@
 - name: Configure zookeeper
   become: yes
   template:
-    dest: "{{ ZOOKEEPER_DIR }}/conf/zoo.cfg"
+    dest: "{{ ZOOKEEPER_CONFDIR }}/zoo.cfg"
     src: "zoo.cfg"
+    owner: "{{ USER }}"
+    group: "{{ GROUP }}"
+    mode: "0644"
+
+- name: Configure dynamic configuration for zookeeper
+  become: yes
+  template:
+    dest: "{{ ZOOKEEPER_CONFDIR }}/zoo.cfg.dynamic"
+    src: "zoo.cfg.dynamic"
     owner: "{{ USER }}"
     group: "{{ GROUP }}"
     mode: "0644"
@@ -37,7 +46,7 @@
 - name: Configure env variables for zookeeper
   become: yes
   template:
-    dest: "{{ ZOOKEEPER_DIR }}/conf/zookeeper-env.sh"
+    dest: "{{ ZOOKEEPER_CONFDIR }}/zookeeper-env.sh"
     src: "zookeeper-env.sh"
     owner: "{{ USER }}"
     group: "{{ GROUP }}"

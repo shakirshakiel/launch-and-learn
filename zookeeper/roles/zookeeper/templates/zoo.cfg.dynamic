@@ -1,0 +1,3 @@
+{% for host in groups['zookeeper'] %}
+server.{{ loop.index }}={{ host }}:2888:3888:participant;{{ hostvars[host]['CLIENTPORT'] }}
+{% endfor %}
