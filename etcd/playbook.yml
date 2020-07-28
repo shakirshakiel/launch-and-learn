@@ -1,0 +1,6 @@
+---
+
+- name: configure etcd cluster
+  hosts: etcd
+  roles:
+    - etcd
