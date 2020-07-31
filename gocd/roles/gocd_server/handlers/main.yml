@@ -1,0 +1,4 @@
+- name: restart gocd server
+  include_tasks: tasks/restart.yml
+  vars:
+    state: restarted

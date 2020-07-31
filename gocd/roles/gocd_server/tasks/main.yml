@@ -6,34 +6,86 @@
     owner: root
     group: root
     mode: 0444
+
+- name: Create go group
+  become: yes
+  group:
+    name: go
+    gid: "{{ gogid }}"
+    system: yes
     
+- name: Create go user
+  become: yes
+  user:
+    name: go
+    comment: GoCD User
+    uid: "{{ gouid }}"
+    group: go
+    shell: /bin/bash
+    home: /var/go
+    create_home: yes
+
+- name: Setup data directory
+  become: yes
+  file:
+    path: "{{ item }}"
+    owner: go
+    group: go
+    mode: 0750
+    state: directory
+  with_items:
+    - /data
+    - /data/var-log-go-server
+    - /data/var-lib-go-server
+
+- name: Create symlinks
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    src: "{{ item.src }}"
+    force: yes
+    state: link
+    owner: go
+    group: go
+  with_items:
+    - {'src': '/data/var-lib-go-server', 'path': '/var/lib/go-server' }
+    - {'src': '/data/var-log-go-server', 'path': '/var/log/go-server' }
+
 - name: Install required packages
   become: yes
   package:
     name: 
       - git
-      - go-server
       - python-lxml
-    
-- name: Restart and enable go-server service
-  become: yes      
-  systemd:
-    name: go-server
-    enabled: yes
-    daemon-reload: yes
-    state: restarted
+      - httpd-tools
+      - go-server-20.3.0-11530
 
-- name: Wait for the GoCD server to start
-  uri:
-    url: http://127.0.0.1:8153/go/pipelines
-    follow_redirects: yes
-    status_code: 200
-    validate_certs: false
-  register: result
-  until: result.status == 200
-  when: not ansible_check_mode
-  retries: 30
-  delay: 2
+- name: Generating password file contents for admin user
+  become: yes
+  become_user: go
+  command: "htpasswd -Bb -c /etc/go/.passwd {{ adminUsername }} {{ adminPassword }}"
 
-- include: cruise-config.yml
+- name: Start gocd server
+  include_tasks: restart.yml
+  vars:
+    state: started
+
+- name: Create passwordfile auth config
+  become: yes
+  gocd_auth_config:
+    domain: "http://gocd.example.com:8153"
+    get_path: "/go/api/admin/security/auth_configs/admin"
+    post_path: "/go/api/admin/security/auth_configs"
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data:
+      id: "admin"
+      plugin_id: "cd.go.authentication.passwordfile"
+      allow_only_known_users_to_login: false
+      properties:
+        - key: "PasswordFilePath"
+          value: "/etc/go/.passwd"
+    state: present
+
+#- include: cruise-config.yml
 - include: nginx.yml
