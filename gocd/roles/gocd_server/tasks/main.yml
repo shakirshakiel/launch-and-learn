@@ -57,6 +57,7 @@
     name: 
       - git
       - python-lxml
+      - python-requests
       - httpd-tools
       - go-server-20.3.0-11530
 
@@ -73,7 +74,7 @@
 - name: Create passwordfile auth config
   become: yes
   gocd_auth_config:
-    domain: "http://gocd.example.com:8153"
+    domain: "http://localhost:8153"
     get_path: "/go/api/admin/security/auth_configs/admin"
     post_path: "/go/api/admin/security/auth_configs"
     username: "{{ adminUsername }}"
