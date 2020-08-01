@@ -66,17 +66,34 @@
   become_user: go
   command: "htpasswd -Bb -c /etc/go/.passwd {{ adminUsername }} {{ adminPassword }}"
 
+- name: Copy post back up script
+  become: yes
+  copy:
+    dest: '/usr/local/bin/gocd_post_backup.sh'
+    src: 'gocd_post_backup.sh'
+    owner: go
+    group: go
+    mode: '0750'
+
 - name: Start gocd server
   include_tasks: restart.yml
   vars:
     state: started
 
-- name: Create passwordfile auth config
+- name: Add auto-registration key
   become: yes
-  gocd_auth_config:
+  xml:
+    path: "/etc/go/cruise-config.xml"
+    xpath: "/cruise/server"
+    attribute: "agentAutoRegisterKey"
+    value: "{{ agentAutoRegisterKey }}"
+
+- name: Create passwordfile authorisation
+  become: yes
+  gocd_api:
     domain: "http://localhost:8153"
-    get_path: "/go/api/admin/security/auth_configs/admin"
-    post_path: "/go/api/admin/security/auth_configs"
+    config_type: 'authorization'
+    entity_id: 'admin'
     username: "{{ adminUsername }}"
     password: "{{ adminPassword }}"
     data:
@@ -88,5 +105,55 @@
           value: "/etc/go/.passwd"
     state: present
 
-#- include: cruise-config.yml
-- include: nginx.yml
+- name: Configure artifacts
+  become: yes
+  gocd_api:
+    domain: "http://localhost:8153"
+    config_type: 'artifacts'
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data:
+      artifacts_dir: "artifacts"
+      purge_settings:
+        purge_start_disk_space: 2.0
+        purge_upto_disk_space: 2.0
+
+- name: Configure backup
+  become: yes
+  gocd_api:
+    domain: "http://localhost:8153"
+    config_type: 'backup'
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data:
+      email_on_failure: false
+      email_on_success: false
+      post_backup_script: "/usr/local/bin/gocd_post_backup.sh"
+      schedule: "0 0 2 * * ?"
+
+- name: Configure default job timeout
+  become: yes
+  gocd_api:
+    domain: "http://localhost:8153"
+    config_type: 'backup'
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data:
+      default_job_timeout: "15"
+
+- name: Configure pipeline-groups
+  become: yes
+  gocd_api:
+    domain: "http://localhost:8153"
+    config_type: 'pipeline_group'
+    entity_id: "Test"
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data:
+      name: "Test"
+      authorization:
+        admins:
+          users:
+            - "{{ adminUsername }}"
+
+#- include: nginx.yml

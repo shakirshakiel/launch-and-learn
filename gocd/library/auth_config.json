@@ -1,8 +1,8 @@
 {
   "ANSIBLE_MODULE_ARGS": {
     "domain": "http://gocd.example.com:8153",
-    "get_path": "/go/api/admin/security/auth_configs/admin",
-    "post_path": "/go/api/admin/security/auth_configs",
+    "config_type": "auth_config",
+    "entity_id": "admin",
     "username": "goadmin",
     "password": "goadmin",
     "data": {

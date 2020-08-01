@@ -1,0 +1,15 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://gocd.example.com:8153",
+    "config_type": "artifacts_config",
+    "username": "goadmin",
+    "password": "goadmin",
+    "data": {
+      "artifacts_dir": "artifacts",
+      "purge_settings": {
+        "purge_start_disk_space": 3.0,
+        "purge_upto_disk_space": 3.0
+      }
+    }
+  }
+}
