@@ -3,3 +3,35 @@ gogid: 1002
 adminUsername: goadmin
 adminPassword: goadmin
 agentAutoRegisterKey: 388b633a88de126531afa41eff9aa69e
+passwordFilePath: "/etc/go/.passwd"
+domain: "http://localhost:8153"
+
+adminData:
+  id: "admin"
+  plugin_id: "cd.go.authentication.passwordfile"
+  allow_only_known_users_to_login: false
+  properties:
+    - key: "PasswordFilePath"
+      value: "/etc/go/.passwd"
+
+artifactsData:
+  artifacts_dir: "artifacts"
+  purge_settings:
+    purge_start_disk_space: 2.0
+    purge_upto_disk_space: 2.0
+
+backupData:
+  email_on_failure: false
+  email_on_success: false
+  post_backup_script: "/usr/local/bin/gocd_post_backup.sh"
+  schedule: "0 0 2 * * ?"
+
+defaultJobTimeoutData:
+  default_job_timeout: "15"
+
+pipelineGroupsData:
+  name: "Test"
+  authorization:
+    admins:
+      users:
+        - "{{ adminUsername }}"

@@ -1,0 +1,17 @@
+- name: Copy post back up script
+  become: yes
+  copy:
+    dest: '/usr/local/bin/gocd_post_backup.sh'
+    src: 'gocd_post_backup.sh'
+    owner: go
+    group: go
+    mode: '0750'
+
+- name: Configure backup
+  become: yes
+  gocd_api:
+    domain: "{{ domain }}"
+    config_type: 'backup'
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data: "{{ backupData }}"

@@ -1,0 +1,30 @@
+- name: Generating password temporary file contents for admin user
+  become: yes
+  become_user: go
+  htpasswd:
+    path: "{{ passwordFilePath }}.ansible"
+    crypt_scheme: md5_crypt
+    name: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    owner: go
+    group: go
+    mode: 0640
+  register: password_file
+
+- name: Generating password file contents for admin user
+  become: yes
+  become_user: go
+  command: "htpasswd -Bb -c {{ passwordFilePath }} {{ adminUsername }} {{ adminPassword }}"
+  when: password_file.changed
+
+- name: Create passwordfile authorisation
+  become: yes
+  gocd_api:
+    domain: "{{ domain }}"
+    config_type: 'authorization'
+    entity_id: "{{ adminData.id }}"
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data: "{{ adminData }}"
+    state: present
+
