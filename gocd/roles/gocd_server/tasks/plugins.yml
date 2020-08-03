@@ -1,0 +1,10 @@
+- name: Install ldap authorisation plugin
+  become: yes
+  get_url:
+    url: "https://github.com/gocd/gocd-ldap-authorization-plugin/releases/download/v4.0.1-6/gocd-ldap-authorization-plugin-4.0.1-6.jar"
+    checksum: "sha256:ad0518af311b9879835d4f7121aca82e68fbb4fb488bdcf3437e8196413544de"
+    dest: "/data/var-lib-go-server/plugins/external"
+    mode: 0644
+    owner: go
+    group: go
+  notify: "restart gocd server"

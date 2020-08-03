@@ -67,6 +67,9 @@
   vars:
     state: started
 
+- name: Install external plugins
+  include_tasks: plugins.yml
+
 - name: Setup admin user
   include_tasks: admin.yml
 
@@ -110,4 +113,4 @@
     data: "{{ item }}"
   with_items: "{{ pipelineGroupsData }}"
 
-- include: nginx.yml
+#- include: nginx.yml
