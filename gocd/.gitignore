@@ -4,3 +4,4 @@
 .DS_Store
 id_rsa
 id_rsa.pub
+library/__pycache__

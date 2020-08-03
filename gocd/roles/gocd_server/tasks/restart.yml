@@ -15,6 +15,6 @@
     validate_certs: false
   register: result
   until: result.status == 200
-  when: not ansible_check_mode and service_state.changed == True
+  when: not ansible_check_mode and service_state.changed
   retries: 30
   delay: 2

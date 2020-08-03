@@ -109,4 +109,4 @@
 #    password: "{{ adminPassword }}"
 #    data: "{{ pipelineGroupsData }}"
 
-#- include: nginx.yml
+- include: nginx.yml
