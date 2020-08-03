@@ -32,7 +32,7 @@ CONFIGS = {
     },
     'pipeline_groups': {
         'entity_path': '/go/api/admin/pipeline_groups',
-        'collection_path': '/go/api/admin/pipeline_groups',
+        'comparison_keys_ignore': ['pipelines'],
         'Accept': 'application/vnd.go.cd.v1+json',
         'type': RESOURCE_TYPE
     },
@@ -204,10 +204,40 @@ class GocdApiService:
 
     def is_data_same(self, other_data):
         other_data_copy = copy.deepcopy(other_data)
-        if "_links" in other_data_copy:
-            other_data_copy.pop("_links")
-        other_data_copy = {k:v for k,v in other_data_copy.items() if v is not None}
+        if '_links' in other_data_copy:
+            other_data_copy.pop('_links')
+        if 'comparison_keys_ignore' in CONFIGS[self.config_type]:
+            for i in CONFIGS[self.config_type]['comparison_keys_ignore']:
+                if i in other_data_copy:
+                    other_data_copy.pop(i)
+
+        other_data_copy = self.__remove_empty_fields(other_data_copy)
         return self.data == other_data_copy
+
+    # Ref: https://gist.github.com/tianchu/f7835b08d7c788b79ade
+    def __remove_empty_fields(self, data_):
+        if isinstance(data_, dict):
+            keys = list(data_.keys())
+            for key in keys:
+                value = data_[key]
+
+                if isinstance(value, dict) or isinstance(value, list):
+                    value = self.__remove_empty_fields(value)
+
+                if value in ["", None, [], {}]:
+                    del data_[key]
+
+        elif isinstance(data_, list):
+            for index in reversed(range(len(data_))):
+                value = data_[index]
+
+                if isinstance(value, dict) or isinstance(value, list):
+                    value = self.__remove_empty_fields(value)
+
+                if value in ["", None, [], {}]:
+                    data_.pop(index)
+
+        return data_
 
     def __sanitized_etag(self, headers):
         if 'ETag' not in headers:
@@ -244,19 +274,22 @@ def main():
         if module.check_mode:
             module.exit_json(changed=True)
         result = gocdApiService.create()
-        module.exit_json(changed=True, meta=result.json())
+        meta = {"new": result.json()}
+        module.exit_json(changed=True, meta=meta)
 
     if gocdApiService.should_update():
         if module.check_mode:
             module.exit_json(changed=True)
         result = gocdApiService.update()
-        module.exit_json(changed=True, meta=result.json())
+        meta = {"update": result.json()}
+        module.exit_json(changed=True, meta=meta)
 
     if gocdApiService.should_delete():
         if module.check_mode:
             module.exit_json(changed=True)
-        result=gocdApiService.delete()
-        module.exit_json(changed=True, meta=result.json())
+        result = gocdApiService.delete()
+        meta = {"delete": result.json()}
+        module.exit_json(changed=True, meta=meta)
 
     module.exit_json(changed=False)
 

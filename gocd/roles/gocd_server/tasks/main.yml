@@ -99,14 +99,15 @@
     password: "{{ adminPassword }}"
     data: "{{ defaultJobTimeoutData }}"
 
-#- name: Configure pipeline-groups
-#  become: yes
-#  gocd_api:
-#    domain: "{{ domain }}"
-#    config_type: 'pipeline_groups'
-#    entity_id: "{{ pipelineGroupsData.name }}"
-#    username: "{{ adminUsername }}"
-#    password: "{{ adminPassword }}"
-#    data: "{{ pipelineGroupsData }}"
+- name: Configure pipeline-groups
+  become: yes
+  gocd_api:
+    domain: "{{ domain }}"
+    config_type: 'pipeline_groups'
+    entity_id: "{{ item.name }}"
+    username: "{{ adminUsername }}"
+    password: "{{ adminPassword }}"
+    data: "{{ item }}"
+  with_items: "{{ pipelineGroupsData }}"
 
 - include: nginx.yml

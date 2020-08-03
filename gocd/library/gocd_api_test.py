@@ -25,7 +25,8 @@ class TestGocdApi:
         CONFIG_TYPE: {
             'entity_path': TEST_ENTITY_PATH,
             'Accept': ACCEPT_HEADER,
-            'type': 'resource'
+            'type': 'resource',
+            'comparison_keys_ignore': ['ignore_1', 'ignore_2']
         }
     }
     TEST_NON_RESOURCE_ENTITY_PATH_CONFIG = {
@@ -403,3 +404,55 @@ class TestGocdApi:
             gocd_api_service = gocd_api.GocdApiService(self.CONFIG_TYPE, self.DOMAIN, self.ENTITY_ID, self.USERNAME,
                                                        self.PASSWORD, None, 'absent')
             assert gocd_api_service.should_delete()
+
+    @patch("gocd_api.CONFIGS", TEST_ENTITY_PATH_CONFIG)
+    def test_gocd_api_service_is_data_same_should_return_true_if_data_is_same(self):
+        other_data = {
+            "location": {
+                "city": "",
+                "state": None,
+                "tags": []
+            },
+            "name": "Nick's Caffee",
+            "reviews": [{}]
+        }
+        data = {"name": "Nick's Caffee"}
+        gocd_api_service = gocd_api.GocdApiService(self.CONFIG_TYPE, self.DOMAIN, self.ENTITY_ID, self.USERNAME,
+                                                   self.PASSWORD, data, 'absent')
+        assert gocd_api_service.is_data_same(other_data)
+
+    @patch("gocd_api.CONFIGS", TEST_ENTITY_PATH_CONFIG)
+    def test_gocd_api_service_is_data_same_should_return_true_if_data_is_same_after_removing_ignore_keys(self):
+        other_data = {
+            "location": {
+                "city": "",
+                "state": None,
+                "tags": []
+            },
+            "name": "Nick's Caffee",
+            "reviews": [{}],
+            "ignore_2": [{"x": "y"}, {"x1": "y1"}],
+            "_links": "links"
+        }
+        data = {"name": "Nick's Caffee"}
+        gocd_api_service = gocd_api.GocdApiService(self.CONFIG_TYPE, self.DOMAIN, self.ENTITY_ID, self.USERNAME,
+                                                   self.PASSWORD, data, 'absent')
+        assert gocd_api_service.is_data_same(other_data)
+
+    @patch("gocd_api.CONFIGS", TEST_ENTITY_PATH_CONFIG)
+    def test_gocd_api_service_is_data_same_should_return_false_if_data_is_not_same_after_removing_ignore_keys(self):
+        other_data = {
+            "location": {
+                "city": "",
+                "state": None,
+                "tags": []
+            },
+            "name": "Nick's Caffee Shop",
+            "reviews": [{}],
+            "ignore_2": [{"x": "y"}, {"x1": "y1"}],
+            "_links": "links"
+        }
+        data = {"name": "Nick's Caffee"}
+        gocd_api_service = gocd_api.GocdApiService(self.CONFIG_TYPE, self.DOMAIN, self.ENTITY_ID, self.USERNAME,
+                                                   self.PASSWORD, data, 'absent')
+        assert not gocd_api_service.is_data_same(other_data)

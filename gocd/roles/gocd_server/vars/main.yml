@@ -30,8 +30,13 @@ defaultJobTimeoutData:
   default_job_timeout: "15"
 
 pipelineGroupsData:
-  name: "Test"
-  authorization:
-    admins:
-      users:
-        - "{{ adminUsername }}"
+  - name: "Test"
+    authorization:
+      admins:
+        users:
+          - "{{ adminUsername }}"
+  - name: "Test1"
+    authorization:
+      admins:
+        users:
+          - "{{ adminUsername }}"
