@@ -7,13 +7,23 @@
     group: root
     mode: 0444
 
+- name: Add cache directory for yum
+  become: yes
+  blockinfile:
+    path: /etc/yum.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: "EOF"
+    block: |
+      cachedir=/vagrant-cache/tmp/yum/$basearch/$releasever
+      keepcache=1
+
 - name: Create go group
   become: yes
   group:
     name: go
     gid: "{{ gogid }}"
     system: yes
-    
+
 - name: Create go user
   become: yes
   user:
@@ -37,6 +47,7 @@
     - /data
     - /data/var-log-go-server
     - /data/var-lib-go-server
+    - /data/var-lib-go-server/libs
 
 - name: Create symlinks
   become: yes
@@ -54,13 +65,47 @@
 - name: Install required packages
   become: yes
   package:
-    name: 
+    name:
       - git
       - python-lxml
       - python-requests
       - python-passlib
       - httpd-tools
-      - go-server-20.3.0-11530
+      - go-server-20.7.0-12097
+
+- name: Update wrapper-config
+  become: yes
+  blockinfile:
+    path: /usr/share/go-server/wrapper-config/wrapper-properties.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      wrapper.java.additional.114=-Djava.rmi.server.hostname=192.168.199.11
+      wrapper.java.additional.115=-Dcom.sun.management.jmxremote
+      wrapper.java.additional.116=-Dcom.sun.management.jmxremote.authenticate=false
+      wrapper.java.additional.117=-Dcom.sun.management.jmxremote.ssl=false
+      wrapper.java.additional.118=-Dcom.sun.management.jmxremote.port=1100
+      wrapper.java.additional.119=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+  notify: "restart gocd server"
+
+- name: Update wrapper for debugging
+  become: yes
+  blockinfile:
+    path: /usr/share/go-server/wrapper-config/wrapper.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      wrapper.ping.interval=6000
+  notify: "restart gocd server"
+
+- name: Setup gocd repo
+  become: yes
+  copy:
+    dest: /etc/go/cipher.aes
+    src: cipher.aes
+    owner: go
+    group: go
+    mode: 0644
 
 - name: Start gocd server
   include_tasks: restart.yml
@@ -83,6 +128,7 @@
     xpath: "/cruise/server"
     attribute: "agentAutoRegisterKey"
     value: "{{ agentAutoRegisterKey }}"
+  notify: "restart gocd server"
 
 - name: Configure artifacts
   become: yes

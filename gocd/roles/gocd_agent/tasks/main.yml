@@ -6,13 +6,23 @@
     owner: root
     group: root
     mode: 0444
-    
+
+- name: Add cache directory for yum
+  become: yes
+  blockinfile:
+    path: /etc/yum.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: "EOF"
+    block: |
+      cachedir=/vagrant-cache/tmp/yum/$basearch/$releasever
+      keepcache=1
+
 - name: Install required packages
   become: yes
   package:
     name: 
       - git
-      - go-agent
+      - go-agent-20.7.0-12097
       - epel-release
 
 - name: Install jq
