@@ -1,0 +1,15 @@
+- name: Status of gocd agent
+  shell:
+    cmd: "launchctl list"
+  register: launchctl_list
+
+- set_fact:
+    loaded: "{{ 'com.gocd.agent' in launchctl_list.stdout }}"
+
+- name: Stop gocd agent
+  command: "launchctl unload /Users/shakirshakiel/Library/LaunchAgents/com.gocd.agent.plist"
+  when: loaded
+
+- name: Start gocd agent
+  command: "launchctl load /Users/shakirshakiel/Library/LaunchAgents/com.gocd.agent.plist"
+

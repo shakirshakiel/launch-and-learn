@@ -1,0 +1,8 @@
+USER_HOME_DIRECTORY: "/Users/shakirshakiel"
+TOOLS_DIRECTORY: "/Users/shakirshakiel/ansible_test"
+
+GOCD:
+  DOWNLOAD_URL: "https://download.gocd.org/binaries/20.7.0-12097/osx/go-agent-20.7.0-12097-osx.zip"
+  DOWNLOAD_CHECKSUM: "sha256:b6e24d34dd992716137a8722c49190de69eb6dca43735ee53be36835ce8e087b"
+  DOWNLOAD_LOCATION: "/Users/shakirshakiel/ansible_test/go-agent-20.7.0-12097-osx.zip"
+  PATH: "/Users/shakirshakiel/ansible_test/go-agent-20.7.0"

@@ -1,0 +1,2 @@
+- name: restart mac gocd agent
+  include_tasks: tasks/restart.yml

@@ -1,0 +1,105 @@
+- name: Setup tools directory
+  file:
+    path: "{{ item }}"
+    mode: 0750
+    state: directory
+  with_items:
+    - "{{ TOOLS_DIRECTORY }}"
+
+- name: Check if go-agent is downloaded
+  stat:
+    path: "{{ GOCD.DOWNLOAD_LOCATION }}"
+  register: gocd_zip_file
+
+- name: Download gocd agent
+  get_url:
+    url: "{{ GOCD.DOWNLOAD_URL }}"
+    checksum: "{{ GOCD.DOWNLOAD_CHECKSUM }}"
+    dest: "{{ GOCD.DOWNLOAD_LOCATION }}"
+    mode: 0700
+  when: not gocd_zip_file.stat.exists
+
+- name: Check if go-agent is unarchived
+  stat:
+    path: "{{ GOCD.PATH }}"
+  register: gocd_path
+
+- name: Unarchive agent file
+  unarchive:
+    src: "{{ GOCD.DOWNLOAD_LOCATION }}"
+    dest: "{{ TOOLS_DIRECTORY }}"
+    remote_src: yes
+  when: not gocd_path.stat.exists
+
+- name: Add /etc/hosts entry for gocd server
+  become: yes
+  blockinfile:
+    path: /etc/hosts
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      192.168.199.11 gocd.example.com
+
+- name: Add the certificate files for Gocd
+  copy:
+    dest: '{{ TOOLS_DIRECTORY }}/{{ item }}'
+    src: '{{ item }}'
+    mode: '0440'
+  with_items:
+    - gocd.example.com.crt
+    - gocd.example.com.key
+  notify: "restart mac gocd agent"
+
+- name: Register with go-server
+  lineinfile:
+    path: '{{ GOCD.PATH }}/wrapper-config/wrapper-properties.conf'
+    regexp: '^wrapper\.app\.parameter\.101='
+    line: 'wrapper.app.parameter.101=https://gocd.example.com/go'
+    mode: 0644
+  notify: "restart mac gocd agent"
+
+- name: Configure go agent
+  blockinfile:
+    path: '{{ GOCD.PATH }}/wrapper-config/wrapper-properties.conf'
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      wrapper.java.command={{ GOCD.PATH }}/jre/Contents/Home/bin/java
+      wrapper.app.parameter.103=-sslVerificationMode
+      wrapper.app.parameter.104=FULL
+      wrapper.app.parameter.105=-sslCertificateFile
+      wrapper.app.parameter.106={{ TOOLS_DIRECTORY }}/gocd.example.com.crt
+      wrapper.app.parameter.107=-sslPrivateKeyFile
+      wrapper.app.parameter.108={{ TOOLS_DIRECTORY }}/gocd.example.com.key
+      wrapper.app.parameter.109=-rootCertFile
+      wrapper.app.parameter.110={{ TOOLS_DIRECTORY }}/gocd.example.com.crt
+  notify: "restart mac gocd agent"
+
+- name: Setup config directory
+  file:
+    path: "{{ item }}"
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ GOCD.PATH }}/config"
+
+- name: Auto-register go agent
+  template:
+    dest: '{{ GOCD.PATH }}/config/autoregister.properties'
+    src: 'autoregister.properties'
+    mode: '0644'
+  notify: "restart mac gocd agent"
+
+- name: Configure launcher script for gocd agent
+  copy:
+    dest: '{{ TOOLS_DIRECTORY }}/go_agent_launcher.sh'
+    src: 'go_agent_launcher.sh'
+    mode: '0755'
+  notify: "restart mac gocd agent"
+
+- name: Configure launch agent for gocd agent
+  copy:
+    dest: '/Users/shakirshakiel/Library/LaunchAgents/com.gocd.agent.plist'
+    src: 'com.gocd.agent.plist'
+    mode: '0644'
+  notify: "restart mac gocd agent"

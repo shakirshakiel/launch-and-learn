@@ -5,7 +5,12 @@
   roles:
     - gocd_server
 
-- name: configure gocd agent
+- name: configure gocd linux agent
   hosts: gocd_agents
   roles:
-    - gocd_agent    
+    - gocd_agent
+
+- name: configure gocd mac agent
+  hosts: gocd_mac_agents
+  roles:
+    - gocd_mac_agent
