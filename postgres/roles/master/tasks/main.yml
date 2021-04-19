@@ -1,0 +1,91 @@
+- name: Add cache directory for yum
+  become: yes
+  blockinfile:
+    path: /etc/yum.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: "EOF"
+    block: |
+      cachedir=/vagrant-cache/tmp/yum/$basearch/$releasever
+      keepcache=1
+
+- name: Add postgres RPM repo
+  become: yes
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+- name: Install postgres 12
+  become: yes
+  package:
+    name:
+      - postgresql12-server
+      - postgresql12-contrib
+      - python-psycopg2
+    state: present
+
+- name: Check if postgres is already installed
+  become: yes
+  stat:
+    path: "/var/lib/pgsql/12/data/PG_VERSION"
+  register: db_initialized
+
+- name: Initialize postgres db
+  become: yes
+  command: /usr/pgsql-12/bin/postgresql-12-setup initdb
+  when: not db_initialized.stat.exists
+
+- name: Create archive directory
+  become: yes
+  file:
+    path: /var/lib/pgsql/12/archive
+    mode: 0700
+    owner: postgres
+    group: postgres
+    state: directory
+
+- name: Configure postgresql.conf
+  become: yes
+  blockinfile:
+    path: /var/lib/pgsql/12/data/postgresql.conf
+    marker: "# {mark} Added by ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      listen_addresses = '*'
+      wal_level = 'hot_standby'
+      synchronous_commit = 'local'
+      archive_mode = 'on'
+      archive_command = 'cp %p /var/lib/pgsql/12/archive/%f'
+      max_wal_senders = 2
+      wal_keep_segments = 2
+      synchronous_standby_names = 'slave01'
+
+- name: Configure pg_hba.conf
+  become: yes
+  blockinfile:
+    path: /var/lib/pgsql/12/data/pg_hba.conf
+    marker: "# {mark} Added by ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      host replication replica 127.0.0.1/32 md5
+      host replication replica 192.168.199.31/32 md5
+      host replication replica 192.168.199.32/32 md5
+
+- name: Start postgres server
+  become: yes
+  service:
+    name: postgresql-12
+    enabled: yes
+    state: started
+
+- name: Wait for postgres server to start
+  wait_for:
+    port: 5432
+    delay: 5
+
+- name: Create replica user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "replica"
+    password: "replica"
+    role_attr_flags: "REPLICATION,LOGIN"

@@ -1,0 +1,64 @@
+- name: Add cache directory for yum
+  become: yes
+  blockinfile:
+    path: /etc/yum.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: "EOF"
+    block: |
+      cachedir=/vagrant-cache/tmp/yum/$basearch/$releasever
+      keepcache=1
+
+- name: Add postgres RPM repo
+  become: yes
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+- name: Install postgres 12
+  become: yes
+  package:
+    name:
+      - postgresql12-server
+      - postgresql12-contrib
+      - python-psycopg2
+    state: present
+
+- name: Check if hot-standby is configured
+  become: yes
+  stat:
+    path: "/var/lib/pgsql/12/data/standby.signal"
+  register: standby
+
+- name: Remove existing data directory
+  become: yes
+  file:
+    path: /var/lib/pgsql/12/data
+    state: absent
+  when: not standby.stat.exists
+
+- name: Create data directory
+  become: yes
+  file:
+    path: /var/lib/pgsql/12/data
+    mode: 0700
+    owner: postgres
+    group: postgres
+    state: directory
+
+- name: Initialize hot-standby
+  become: yes
+  become_user: postgres
+  shell: "PGPASSWORD=replica pg_basebackup -h 192.168.199.32 -U replica -D /var/lib/pgsql/12/data -Fp -Xs -P -R"
+  when: not standby.stat.exists
+
+- name: Start postgres server
+  become: yes
+  service:
+    name: postgresql-12
+    enabled: yes
+    state: started
+
+- name: Wait for postgres server to start
+  wait_for:
+    port: 5432
+    delay: 5

@@ -1,0 +1,11 @@
+---
+
+- name: configure postgres master
+  hosts: master
+  roles:
+    - master
+
+- name: configure postgres slave
+  hosts: slave
+  roles:
+    - slave
