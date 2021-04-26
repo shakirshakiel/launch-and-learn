@@ -1,0 +1,7 @@
+*.key
+*.crt
+.vagrant
+.DS_Store
+vagrant-cache/tmp
+roles/artifactory/files/artifactory.lic
+library/repository_jsons

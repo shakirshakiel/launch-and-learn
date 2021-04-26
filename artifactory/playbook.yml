@@ -1,0 +1,6 @@
+---
+
+- name: configure artifactory
+  hosts: artifactory
+  roles:
+    - artifactory

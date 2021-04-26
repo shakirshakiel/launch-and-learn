@@ -1,0 +1,4 @@
+- name: restart artifactory nodes
+  include_tasks: tasks/restart.yml
+  vars:
+    state: restarted

@@ -1,0 +1,20 @@
+- name: Create Admin User temp ansible file
+  become: yes
+  template:
+    dest: /data/artifactory-var/etc/access/bootstrap.creds.ansible
+    src:  bootstrap.creds.j2
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0600'
+  register: admin_user_ansible_file
+
+- name: Create Admin User
+  become: yes
+  template:
+    dest: /data/artifactory-var/etc/access/bootstrap.creds
+    src:  bootstrap.creds.j2
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0600'
+  when: admin_user_ansible_file.changed
+  notify: "restart artifactory nodes"

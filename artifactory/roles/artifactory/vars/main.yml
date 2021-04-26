@@ -1,0 +1,143 @@
+localRepositories:
+  - key: shakiel-alpine-local
+    packageType: alpine
+  - key: shakiel-cocoapods-local
+    packageType: cocoapods
+  - key: shakiel-conda-local
+    packageType: conda
+  - key: shakiel-cran-local
+    packageType: cran
+  - key: shakiel-debian-local
+    packageType: debian
+  - key: shakiel-docker-local
+    packageType: docker
+  - key: shakiel-gems-local
+    packageType: gems
+  - key: shakiel-generic-local
+    packageType: generic
+  - key: shakiel-go-local
+    packageType: go
+  - key: shakiel-gradle-dev-local
+    packageType: gradle
+  - key: shakiel-gradle-release-local
+    packageType: gradle
+  - key: shakiel-helm-local
+    packageType: helm
+  - key: shakiel-libs-release-local
+    packageType: maven
+    handleReleases: true
+    handleSnapshots: false
+  - key: shakiel-libs-snapshot-local
+    packageType: maven
+    handleReleases: false
+    handleSnapshots: true
+  - key: shakiel-npm-local
+    packageType: npm
+  - key: shakiel-pypi-local
+    packageType: pypi
+  - key: shakiel-rpm-local
+    packageType: rpm
+
+remoteRepositories:
+  - key: shakiel-alpine-remote
+    packageType: alpine
+    url: "http://dl-cdn.alpinelinux.org/alpine"
+  - key: shakiel-cocoapods-remote
+    packageType: cocoapods
+    url: "https://github.com/"
+    podsSpecsRepoUrl: "https://github.com/CocoaPods/Specs"
+    vcsGitProvider: "GITHUB"
+    vcsType: GIT
+  - key: shakiel-conda-remote
+    packageType: conda
+    url: "https://repo.anaconda.com/pkgs/main"
+  - key: shakiel-cran-remote
+    packageType: cran
+    url: "https://cran.r-project.org/"
+  - key: shakiel-debian-remote
+    packageType: debian
+    url: "http://archive.ubuntu.com/ubuntu/"
+  - key: shakiel-docker-remote
+    packageType: docker
+    url: "https://registry-1.docker.io/"
+  - key: shakiel-gems-remote
+    packageType: gems
+    url: "https://rubygems.org/"
+  - key: shakiel-generic-remote
+    packageType: generic
+    url: "https://github.com"
+  - key: shakiel-gocenter
+    packageType: go
+    url: "https://gocenter.io/"
+    vcsGitProvider: "ARTIFACTORY"
+    vcsType: GIT
+  - key: shakiel-gradle-jcenter
+    packageType: maven
+    url: "https://jcenter.bintray.com"
+  - key: shakiel-chartcenter
+    packageType: helm
+    url: "https://repo.chartcenter.io/"
+  - key: shakiel-maven-jcenter
+    packageType: maven
+    url: "https://jcenter.bintray.com"
+  - key: shakiel-npm-remote
+    packageType: npm
+    url: "https://registry.npmjs.org"
+  - key: shakiel-pypi-remote
+    packageType: pypi
+    url: "https://files.pythonhosted.org"
+    pyPIRegistryUrl: "https://pypi.org"
+  - key: shakiel-rpm-remote
+    packageType: rpm
+    url: "http://mirror.centos.org/centos/"
+
+virtualRepositories:
+  - key: shakiel-alpine
+    packageType: alpine
+    repositories: [ "shakiel-alpine-local", "shakiel-alpine-remote" ]
+  - key: shakiel-conda
+    packageType: conda
+    repositories: [ "shakiel-conda-local", "shakiel-conda-remote" ]
+  - key: shakiel-cran
+    packageType: cran
+    repositories: [ "shakiel-cran-local", "shakiel-cran-remote" ]
+  - key: shakiel-debian
+    packageType: debian
+    repositories: [ "shakiel-debian-local", "shakiel-debian-remote" ]
+  - key: shakiel-docker
+    packageType: docker
+    repositories: [ "shakiel-docker-local", "shakiel-docker-remote" ]
+  - key: shakiel-gems
+    packageType: gems
+    repositories: [ "shakiel-gems-local", "shakiel-gems-remote" ]
+  - key: shakiel-generic
+    packageType: generic
+    repositories: [ "shakiel-generic-local", "shakiel-generic-remote" ]
+  - key: shakiel-go
+    packageType: go
+    repositories: [ "shakiel-go-local", "shakiel-gocenter" ]
+  - key: shakiel-gradle-dev
+    packageType: gradle
+    repositories: [ "shakiel-gradle-dev-local", "shakiel-gradle-jcenter" ]
+  - key: shakiel-gradle-release
+    packageType: gradle
+    repositories: [ "shakiel-gradle-release-local", "shakiel-gradle-jcenter" ]
+  - key: shakiel-helm
+    packageType: helm
+    repositories: [ "shakiel-helm-local", "shakiel-chartcenter" ]
+  - key: shakiel-libs-release
+    packageType: maven
+    repositories: [ "shakiel-libs-release-local", "shakiel-maven-jcenter" ]
+  - key: shakiel-libs-snapshot
+    packageType: maven
+    repositories: [ "shakiel-libs-snapshot-local", "shakiel-maven-jcenter" ]
+  - key: shakiel-npm
+    packageType: npm
+    repositories: [ "shakiel-npm-local", "shakiel-npm-remote" ]
+  - key: shakiel-pypi
+    packageType: pypi
+    repositories: [ "shakiel-pypi-local", "shakiel-pypi-remote" ]
+  - key: shakiel-rpm
+    packageType: rpm
+    repositories: [ "shakiel-rpm-local", "shakiel-rpm-remote" ]
+

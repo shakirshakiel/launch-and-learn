@@ -1,0 +1,15 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://192.168.199.51:8082/artifactory",
+    "repo_type": "remote",
+    "username": "admin",
+    "password": "artifactory",
+    "data": {
+      "key": "shakiel-gradle-jcenter",
+      "packageType": "maven",
+      "url": "https://jcenter.bintray.com",
+      "description": "Jcenter repo"
+    },
+    "state": "present"
+  }
+}

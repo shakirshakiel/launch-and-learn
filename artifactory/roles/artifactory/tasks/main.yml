@@ -1,0 +1,174 @@
+- name: create group for artifactory
+  group:
+    name: "{{ artifactory_group }}"
+    gid: "{{ artifactory_gid }}"
+    system: yes
+    state: present
+  become: yes
+
+- name: create user for artifactory
+  user:
+    name: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    uid: "{{ artifactory_uid }}"
+    system: yes
+    shell: /bin/bash
+    home: /home/artifactory
+    create_home: yes
+  become: yes
+
+- name: Add cache directory for yum
+  become: yes
+  blockinfile:
+    path: /etc/yum.conf
+    marker: "# --- {mark} Added by Ansible ---"
+    insertbefore: "EOF"
+    block: |
+      cachedir=/vagrant-cache/tmp/yum/$basearch/$releasever
+      keepcache=1
+
+- name: Add the artifactory repo
+  become: yes
+  get_url:
+    url: https://releases.jfrog.io/artifactory/artifactory-pro-rpms/artifactory-pro-rpms.repo
+    dest: /etc/yum.repos.d/artifactory-pro-rpms.repo
+    owner: root
+    group: root
+    mode: '0444'
+
+- name: Install required packages
+  become: yes
+  package:
+    name:
+      - python2-jmespath
+      - python-requests
+
+- name: Create jfrog directories
+  become: yes
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
+  with_items:
+    - '/opt/jfrog'
+
+- name: Create data folders for artifactory
+  become: yes
+  file:
+    path: "{{ item }}"
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - '/opt/jfrog/artifactory'
+    - '/data/artifactory-var'
+    - '/data/artifactory-var/etc/access'
+
+- name: Create security folder for artifactory
+  become: yes
+  file:
+    path: "{{ item }}"
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    state: directory
+    mode: '0700'
+  with_items:
+    - '/data/artifactory-var/etc/security'
+
+- name: Symlink data folder for artifactory
+  become: yes
+  file:
+    src: /data/artifactory-var
+    dest: /opt/jfrog/artifactory/var
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    state: link
+
+- name: Install Artifactory and its required packages
+  become: yes
+  package:
+    name:
+      - jfrog-artifactory-pro-7.18.3-71803900
+    state: present
+
+- name: Copy master key
+  become: yes
+  template:
+    dest: /data/artifactory-var/etc/security/master.key
+    src: master.key.j2
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0600'
+  notify: "restart artifactory nodes"
+
+- name: configure templates
+  become: yes
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0755'
+  with_items:
+    - { src: system.yaml.j2 , dest: "/data/artifactory-var/etc/system.yaml" }
+  notify: "restart artifactory nodes"
+
+- name: configure license
+  become: yes
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0640'
+  with_items:
+    - { src: artifactory.lic , dest: "/data/artifactory-var/etc/artifactory/artifactory.lic" }
+  notify: "restart artifactory nodes"
+
+- name: Create admin user
+  include_tasks: tasks/admin.yml
+
+- meta: flush_handlers
+
+- name: start artifactory node
+  include_tasks: tasks/restart.yml
+  vars:
+    state: started
+
+- name: configure local repositories
+  become: yes
+  artifactory_repository:
+    domain: "{{ artifactory_api_domain }}"
+    repo_type: "local"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ localRepositories }}"
+
+- name: configure remote repositories
+  become: yes
+  artifactory_repository:
+    domain: "{{ artifactory_api_domain }}"
+    repo_type: "remote"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ remoteRepositories }}"
+  tags:
+    - test
+
+- name: configure virtual repositories
+  become: yes
+  artifactory_repository:
+    domain: "{{ artifactory_api_domain }}"
+    repo_type: "virtual"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ virtualRepositories }}"
