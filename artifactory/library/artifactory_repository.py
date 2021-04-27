@@ -436,7 +436,6 @@ class ArtifactoryApiService:
         data_copy = self.full_data()
         if data_copy["rclass"] == "remote":
             data_copy["description"] = "{} {}".format(data_copy["description"], "(local file cache)")
-        # pdb.set_trace()
         other_data_copy = copy.deepcopy(other_data)
         return data_copy == other_data_copy
 

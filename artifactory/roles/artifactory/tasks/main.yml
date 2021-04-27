@@ -36,12 +36,20 @@
     group: root
     mode: '0444'
 
+- name: Enable epel
+  become: yes
+  package:
+    name:
+      - epel-release
+
 - name: Install required packages
   become: yes
   package:
     name:
       - python2-jmespath
       - python-requests
+      - python-xmltodict
+      - python-yaml
 
 - name: Create jfrog directories
   become: yes
@@ -65,7 +73,9 @@
   with_items:
     - '/opt/jfrog/artifactory'
     - '/data/artifactory-var'
+    - '/data/artifactory-var/etc'
     - '/data/artifactory-var/etc/access'
+    - '/data/artifactory-var/etc/artifactory'
 
 - name: Create security folder for artifactory
   become: yes
@@ -77,6 +87,7 @@
     mode: '0700'
   with_items:
     - '/data/artifactory-var/etc/security'
+    - '/data/artifactory-var/etc/artifactory/security'
 
 - name: Symlink data folder for artifactory
   become: yes
@@ -99,6 +110,16 @@
   template:
     dest: /data/artifactory-var/etc/security/master.key
     src: master.key.j2
+    owner: "{{ artifactory_user }}"
+    group: "{{ artifactory_group }}"
+    mode: '0600'
+  notify: "restart artifactory nodes"
+
+- name: Copy artifactory key
+  become: yes
+  template:
+    dest: /data/artifactory-var/etc/artifactory/security/artifactory.key
+    src: artifactory.key.j2
     owner: "{{ artifactory_user }}"
     group: "{{ artifactory_group }}"
     mode: '0600'
@@ -159,8 +180,6 @@
     data: "{{ item }}"
     state: present
   with_items: "{{ remoteRepositories }}"
-  tags:
-    - test
 
 - name: configure virtual repositories
   become: yes
@@ -172,3 +191,16 @@
     data: "{{ item }}"
     state: present
   with_items: "{{ virtualRepositories }}"
+
+- name: include ldap vars_files
+  include_vars: ldap.yml
+
+- name: configure ldap settings
+  become: yes
+  artifactory_ldap:
+    domain: "{{ artifactory_api_domain }}"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    ldapSetting: "{{ ldapSetting }}"
+    ldapGroupSetting: "{{ ldapGroupSetting }}"
+    state: present

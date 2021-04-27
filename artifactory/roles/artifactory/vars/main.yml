@@ -140,4 +140,3 @@ virtualRepositories:
   - key: shakiel-rpm
     packageType: rpm
     repositories: [ "shakiel-rpm-local", "shakiel-rpm-remote" ]
-
