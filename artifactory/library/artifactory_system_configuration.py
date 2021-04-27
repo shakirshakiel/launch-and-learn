@@ -42,7 +42,7 @@ class ArtifactoryApiRequest:
         return params
 
 
-class ArtifactoryApiService:
+class ArtifactoryLdapApiService:
 
     def __init__(self, domain, username, password, ldap_setting, ldap_group_setting, state):
         self.domain = domain
@@ -108,14 +108,73 @@ class ArtifactoryApiService:
         }
         return self.artifactory_api_request().patch_entity(yaml.dump(data))
 
+class ArtifactoryBackupApiService:
+
+    def __init__(self, domain, username, password, data, state):
+        self.domain = domain
+        self.username = username
+        self.password = password
+        self.data = data
+        self.state = state
+
+    def artifactory_api_request(self):
+        return ArtifactoryApiRequest(self.domain, self.username, self.password)
+
+    def get_backup_configs(self):
+        entity = self.artifactory_api_request().get_entity()
+        xml = xmltodict.parse(entity.content)
+        backups = json.loads(json.dumps(xml['config']['backups']))
+        return backups
+
+    def is_data_same(self, remote_data, local_data):
+        if len(remote_data) != len(local_data):
+            return False
+
+        remote_data_copy = copy.deepcopy(remote_data)
+        local_data_copy = copy.deepcopy(local_data)
+        sorter = lambda x: x.get('key')
+        remote_data_copy.sort(key=sorter)
+        local_data_copy.sort(key=sorter)
+        return local_data_copy == remote_data_copy
+
+    def should_update(self):
+        if self.state == "absent":
+            return False
+        backups = self.get_backup_configs()
+        if backups is not None and \
+                'backup' in backups and \
+                self.is_data_same(backups['backup'], self.data['backups']):
+            return False
+        return True
+
+    def should_delete(self):
+        backups = self.get_backup_configs()
+        if self.state == "absent" and 'backup' in backups and len(backups['backup']) > 0:
+            return True
+        return False
+
+    def update(self):
+        other_data = copy.deepcopy(self.data)
+        backups_data = other_data['backups']
+        data = {"backups": {}}
+        for i in backups_data:
+            backup_name = i.pop('key')
+            data["backups"][backup_name] = i
+        return self.artifactory_api_request().patch_entity(yaml.dump(data))
+
+    def delete(self):
+        data = {
+            "backups": None
+        }
+        return self.artifactory_api_request().patch_entity(yaml.dump(data))
 
 def main():
     fields = dict(
         domain=dict(required=True, type="str"),
         username=dict(required=True, type="str"),
         password=dict(required=True, type="str", no_log=True),
-        ldapSetting=dict(required=True, type="dict"),
-        ldapGroupSetting=dict(required=True, type="dict"),
+        config_type=dict(required=True, type="str", choices=['ldap', 'backups']),
+        data=dict(required=True, type="dict"),
         state=dict(required=False, type="str", default='present', choices=['absent', 'present']),
     )
 
@@ -124,11 +183,21 @@ def main():
     domain = module.params['domain']
     username = module.params['username']
     password = module.params['password']
-    ldap_setting = module.params['ldapSetting']
-    ldap_group_setting = module.params['ldapGroupSetting']
+    config_type = module.params['config_type']
+    data = module.params['data']
     state = module.params['state']
 
-    artifactory_api_service = ArtifactoryApiService(domain, username, password, ldap_setting, ldap_group_setting, state)
+    artifactory_api_service = None
+
+    if config_type == "ldap":
+        if 'ldapSetting' not in data or 'ldapGroupSetting' not in data:
+            module.fail_json(msg="ldapSetting and ldapGroupSetting in data are mandatory", changed=False)
+        artifactory_api_service = ArtifactoryLdapApiService(domain, username, password, data['ldapSetting'], data['ldapGroupSetting'], state)
+
+    if config_type == 'backups':
+        if 'backups' not in data:
+            module.fail_json(msg="backups in data is mandatory", changed=False)
+        artifactory_api_service = ArtifactoryBackupApiService(domain, username, password, data, state)
 
     if artifactory_api_service.should_update():
         if module.check_mode:

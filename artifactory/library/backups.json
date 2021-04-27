@@ -1,0 +1,35 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://192.168.199.51:8082/artifactory",
+    "username": "admin",
+    "password": "artifactory",
+    "data": {
+      "backups": [
+        {
+          "key": "backup-daily",
+          "enabled": "true",
+          "cronExp": "0 0 2 ? * MON-FRI",
+          "retentionPeriodHours": "0",
+          "createArchive": "false",
+          "excludedRepositories": null,
+          "sendMailOnError": "true",
+          "excludeNewRepositories": "false",
+          "precalculate": "false"
+        },
+        {
+          "key": "backup-weekly",
+          "enabled": "true",
+          "cronExp": "0 0 2 ? * SAT",
+          "retentionPeriodHours": "336",
+          "createArchive": "false",
+          "excludedRepositories": null,
+          "sendMailOnError": "true",
+          "excludeNewRepositories": "false",
+          "precalculate": "false"
+        }
+      ]
+    },
+    "config_type": "backups",
+    "state": "present"
+  }
+}

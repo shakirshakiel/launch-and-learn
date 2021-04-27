@@ -3,33 +3,35 @@
     "domain": "http://192.168.199.51:8082/artifactory",
     "username": "admin",
     "password": "artifactory",
-    "ldapSetting": {
-      "key": "prod-ldap",
-      "enabled": "true",
-      "ldapUrl": "ldap://ldap.forumsys.com",
-      "search": {
-        "searchFilter": "(|(cn=*{0}*)(mail=*{0}))",
-        "searchBase": "dc=example,dc=com",
-        "searchSubTree": "true",
-        "managerDn": "cn=read-only-admin,dc=example,dc=com",
-        "managerPassword": "JE2cUD4Qs5KyD4gMLvsFhnSu9EtmcvuqiR4KZmvfocWgt95MFa"
+    "data": {
+      "ldapSetting": {
+        "key": "prod-ldap",
+        "enabled": "true",
+        "ldapUrl": "ldap://ldap.forumsys.com",
+        "search": {
+          "searchFilter": "(|(cn=*{0}*)(mail=*{0}))",
+          "searchBase": "dc=example,dc=com",
+          "searchSubTree": "true",
+          "managerDn": "cn=read-only-admin,dc=example,dc=com",
+          "managerPassword": "JE2cUD4Qs5KyD4gMLvsFhnSu9EtmcvuqiR4KZmvfocWgt95MFa"
+        },
+        "autoCreateUser": "true",
+        "emailAttribute": "mail",
+        "ldapPoisoningProtection": "false",
+        "allowUserToAccessProfile": "true",
+        "pagingSupportEnabled": "true"
       },
-      "autoCreateUser": "true",
-      "emailAttribute": "mail",
-      "ldapPoisoningProtection": "false",
-      "allowUserToAccessProfile": "true",
-      "pagingSupportEnabled": "true"
-    },
-    "ldapGroupSetting": {
-      "name": "prod-ldap-group",
-      "groupBaseDn": "dc=example,dc=com",
-      "groupNameAttribute": "cn",
-      "groupMemberAttribute": "uniqueMember",
-      "subTree": "true",
-      "filter": "(objectClass=groupOfUniqueNames)",
-      "descriptionAttribute": "description",
-      "strategy": "STATIC",
-      "enabledLdap": "prod-ldap"
+      "ldapGroupSetting": {
+        "name": "prod-ldap-group",
+        "groupBaseDn": "dc=example,dc=com",
+        "groupNameAttribute": "cn",
+        "groupMemberAttribute": "uniqueMember",
+        "subTree": "true",
+        "filter": "(objectClass=groupOfUniqueNames)",
+        "descriptionAttribute": "description",
+        "strategy": "STATIC",
+        "enabledLdap": "prod-ldap"
+      }
     },
     "state": "present"
   }

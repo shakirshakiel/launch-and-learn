@@ -197,10 +197,26 @@
 
 - name: configure ldap settings
   become: yes
-  artifactory_ldap:
+  artifactory_system_configuration:
     domain: "{{ artifactory_api_domain }}"
     username: "{{ admin_username }}"
     password: "{{ admin_password }}"
-    ldapSetting: "{{ ldapSetting }}"
-    ldapGroupSetting: "{{ ldapGroupSetting }}"
+    config_type: "ldap"
+    data:
+      ldapSetting: "{{ ldapSetting }}"
+      ldapGroupSetting: "{{ ldapGroupSetting }}"
+    state: present
+
+- name: include backup vars_files
+  include_vars: backup.yml
+
+- name: configure backup settings
+  become: yes
+  artifactory_system_configuration:
+    domain: "{{ artifactory_api_domain }}"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    config_type: "backups"
+    data:
+      backup: "{{ backups }}"
     state: present
