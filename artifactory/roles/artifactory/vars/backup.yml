@@ -1,14 +1,29 @@
-backup:
+backups:
   - key: "backup-daily"
     enabled: "true"
     cronExp: "0 0 2 ? * MON-FRI"
     retentionPeriodHours: "0"
     createArchive: "false"
-    excludedRepositories: null
+    excludedRepositories:
+      - shakiel-alpine-remote
+      - shakiel-cocoapods-remote
+      - shakiel-conda-remote
+      - shakiel-cran-remote
+      - shakiel-debian-remote
+      - shakiel-docker-remote
+      - shakiel-gems-remote
+      - shakiel-generic-remote
+      - shakiel-npm-remote
+      - shakiel-pypi-remote
+      - shakiel-chartcenter
+      - shakiel-rpm-remote
+      - shakiel-gocenter
+      - shakiel-maven-jcenter
+      - shakiel-gradle-jcenter
     sendMailOnError: "true"
     excludeNewRepositories: "false"
     precalculate: "false"
-    
+
   - key: "backup-weekly"
     enabled: "false"
     cronExp: "0 0 2 ? * SAT"
@@ -18,4 +33,3 @@ backup:
     sendMailOnError: "true"
     excludeNewRepositories: "false"
     precalculate: "false"
-  }

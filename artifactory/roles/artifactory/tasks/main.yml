@@ -62,7 +62,7 @@
   with_items:
     - '/opt/jfrog'
 
-- name: Create data folders for artifactory
+- name: Create data and backup folders for artifactory
   become: yes
   file:
     path: "{{ item }}"
@@ -76,6 +76,8 @@
     - '/data/artifactory-var/etc'
     - '/data/artifactory-var/etc/access'
     - '/data/artifactory-var/etc/artifactory'
+    - '/backup-daily'
+    - '/backup-weekly'
 
 - name: Create security folder for artifactory
   become: yes
@@ -218,5 +220,5 @@
     password: "{{ admin_password }}"
     config_type: "backups"
     data:
-      backup: "{{ backups }}"
+      backups: "{{ backups }}"
     state: present

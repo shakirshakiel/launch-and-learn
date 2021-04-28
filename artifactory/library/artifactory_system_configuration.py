@@ -135,6 +135,16 @@ class ArtifactoryBackupApiService:
         sorter = lambda x: x.get('key')
         remote_data_copy.sort(key=sorter)
         local_data_copy.sort(key=sorter)
+
+        for item in remote_data_copy:
+            if item['excludedRepositories'] is not None:
+                item['excludedRepositories'] = item['excludedRepositories']['repositoryRef']
+                item['excludedRepositories'].sort()
+
+        for item in local_data_copy:
+            if item['excludedRepositories'] is not None:
+                item['excludedRepositories'].sort()
+
         return local_data_copy == remote_data_copy
 
     def should_update(self):
