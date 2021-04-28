@@ -161,39 +161,6 @@
   vars:
     state: started
 
-- name: configure local repositories
-  become: yes
-  artifactory_repository:
-    domain: "{{ artifactory_api_domain }}"
-    repo_type: "local"
-    username: "{{ admin_username }}"
-    password: "{{ admin_password }}"
-    data: "{{ item }}"
-    state: present
-  with_items: "{{ localRepositories }}"
-
-- name: configure remote repositories
-  become: yes
-  artifactory_repository:
-    domain: "{{ artifactory_api_domain }}"
-    repo_type: "remote"
-    username: "{{ admin_username }}"
-    password: "{{ admin_password }}"
-    data: "{{ item }}"
-    state: present
-  with_items: "{{ remoteRepositories }}"
-
-- name: configure virtual repositories
-  become: yes
-  artifactory_repository:
-    domain: "{{ artifactory_api_domain }}"
-    repo_type: "virtual"
-    username: "{{ admin_username }}"
-    password: "{{ admin_password }}"
-    data: "{{ item }}"
-    state: present
-  with_items: "{{ virtualRepositories }}"
-
 - name: include ldap vars_files
   include_vars: ldap.yml
 
@@ -222,3 +189,36 @@
     data:
       backups: "{{ backups }}"
     state: present
+
+- name: configure local repositories
+  become: yes
+  artifactory_entity:
+    domain: "{{ artifactory_api_domain }}"
+    entity_type: "local_repository"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ localRepositories }}"
+
+- name: configure remote repositories
+  become: yes
+  artifactory_entity:
+    domain: "{{ artifactory_api_domain }}"
+    entity_type: "remote_repository"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ remoteRepositories }}"
+
+- name: configure virtual repositories
+  become: yes
+  artifactory_entity:
+    domain: "{{ artifactory_api_domain }}"
+    entity_type: "virtual_repository"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ virtualRepositories }}"

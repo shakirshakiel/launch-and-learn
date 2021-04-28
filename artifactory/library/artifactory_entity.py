@@ -6,8 +6,17 @@ import requests
 import copy
 import pdb
 
-REPO_DEFAULTS = {
-    "local": {
+LOCAL_REPOSITORY_TYPE = "local_repository"
+REMOTE_REPOSITORY_TYPE = "remote_repository"
+VIRTUAL_REPOSITORY_TYPE = "virtual_repository"
+GROUP_TYPE = "groups"
+PERMISSION_TYPE = "permissions"
+
+REPO_TYPES = [LOCAL_REPOSITORY_TYPE, REMOTE_REPOSITORY_TYPE, VIRTUAL_REPOSITORY_TYPE]
+ENTITY_TYPES = REPO_TYPES + [GROUP_TYPE, PERMISSION_TYPE]
+
+ENTITY_DEFAULTS = {
+    LOCAL_REPOSITORY_TYPE: {
         "key": "",
         "packageType": "",
         "description": "",
@@ -55,7 +64,7 @@ REPO_DEFAULTS = {
         "enabledChefSupport": False,
         "rclass": "local"
     },
-    "remote": {
+    REMOTE_REPOSITORY_TYPE: {
         "key": "",
         "packageType": "",
         "description": "",
@@ -136,7 +145,7 @@ REPO_DEFAULTS = {
         "enabledChefSupport": False,
         "rclass": "remote"
     },
-    "virtual": {
+    VIRTUAL_REPOSITORY_TYPE: {
         "key": "",
         "packageType": "",
         "description": "",
@@ -179,7 +188,7 @@ REPO_DEFAULTS = {
 }
 
 REPO_OVERRIDES = {
-    "local": {
+    LOCAL_REPOSITORY_TYPE: {
         "alpine": {},
         "cocoapods": {
             "enableCocoaPodsSupport": True
@@ -220,7 +229,7 @@ REPO_OVERRIDES = {
             "yumGroupFileNames": "groups.xml"
         }
     },
-    "remote": {
+    REMOTE_REPOSITORY_TYPE: {
         "alpine": {},
         "cocoapods": {
             "enableCocoaPodsSupport": True,
@@ -269,7 +278,7 @@ REPO_OVERRIDES = {
         },
         "rpm": {}
     },
-    "virtual": {
+    VIRTUAL_REPOSITORY_TYPE: {
         "alpine": {},
         "cocoapods": {},
         "conda": {},
@@ -326,9 +335,9 @@ REPO_OVERRIDES = {
 
 class ArtifactoryApiRequest:
 
-    def __init__(self, domain, repo_key, username, password):
+    def __init__(self, domain, path, username, password):
         self.domain = domain
-        self.repo_key = repo_key
+        self.path = path
         self.username = username
         self.password = password
 
@@ -365,7 +374,7 @@ class ArtifactoryApiRequest:
         return result
 
     def url(self):
-        url = "{}{}{}".format(self.domain, "/api/repositories/", self.repo_key)
+        url = "{}{}".format(self.domain, self.path)
         return url
 
     def basic_params(self):
@@ -376,24 +385,30 @@ class ArtifactoryApiRequest:
 
 class ArtifactoryApiService:
 
-    def __init__(self, domain, repo_type, repo_key, username, password, data, state):
+    def __init__(self, domain, entity_type, username, password, data, state):
         self.domain = domain
-        self.repo_type = repo_type
-        self.repo_key = repo_key
+        self.entity_type = entity_type
         self.username = username
         self.password = password
         self.data = data
         self.state = state
 
+    def is_repo_type(self):
+        return self.entity_type in REPO_TYPES
+
     def full_data(self):
-        package_type = self.data['packageType']
-        full_data = copy.deepcopy(REPO_DEFAULTS[self.repo_type])
-        full_data.update(REPO_OVERRIDES[self.repo_type][package_type])
+        full_data = copy.deepcopy(ENTITY_DEFAULTS[self.entity_type])
+        if self.is_repo_type():
+            package_type = self.data['packageType']
+            full_data.update(REPO_OVERRIDES[self.entity_type][package_type])
         full_data.update(self.data)
         return full_data
 
     def artifactory_api_request(self):
-        return ArtifactoryApiRequest(self.domain, self.repo_key, self.username, self.password)
+        path = None
+        if self.is_repo_type():
+            path = "/api/repositories/{}".format(self.data['key'])
+        return ArtifactoryApiRequest(self.domain, path, self.username, self.password)
 
     def create(self):
         return self.artifactory_api_request().put_entity(self.full_data())
@@ -434,7 +449,7 @@ class ArtifactoryApiService:
 
     def is_data_same(self, other_data):
         data_copy = self.full_data()
-        if data_copy["rclass"] == "remote":
+        if self.is_repo_type() and data_copy["rclass"] == "remote":
             data_copy["description"] = "{} {}".format(data_copy["description"], "(local file cache)")
         other_data_copy = copy.deepcopy(other_data)
         return data_copy == other_data_copy
@@ -443,7 +458,7 @@ class ArtifactoryApiService:
 def main():
     fields = dict(
         domain=dict(required=True, type="str"),
-        repo_type=dict(required=True, type="str", choices=["local", "remote", "virtual"]),
+        entity_type=dict(required=False, type="str", choices=ENTITY_TYPES),
         username=dict(required=True, type="str"),
         password=dict(required=True, type="str", no_log=True),
         data=dict(required=True, type="dict"),
@@ -453,16 +468,16 @@ def main():
     module = AnsibleModule(argument_spec=fields, supports_check_mode=True)
 
     domain = module.params['domain']
-    repo_type = module.params['repo_type']
+    entity_type = module.params['entity_type']
     username = module.params['username']
     password = module.params['password']
     data = module.params['data']
     state = module.params['state']
-    if 'key' not in data:
-        module.fail_json(msg="Key in data is mandatory", changed=False)
-    repo_key = data["key"]
 
-    artifactory_api_service = ArtifactoryApiService(domain, repo_type, repo_key, username, password, data, state)
+    if entity_type in REPO_TYPES and 'key' not in data:
+        module.fail_json(msg="Key in data is mandatory for {}".format   (entity_type), changed=False)
+
+    artifactory_api_service = ArtifactoryApiService(domain, entity_type, username, password, data, state)
     if artifactory_api_service.should_create():
         if module.check_mode:
             module.exit_json(changed=True)
