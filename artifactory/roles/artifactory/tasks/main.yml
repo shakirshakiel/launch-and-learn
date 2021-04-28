@@ -176,19 +176,16 @@
       ldapGroupSetting: "{{ ldapGroupSetting }}"
     state: present
 
-- name: include backup vars_files
-  include_vars: backup.yml
-
-- name: configure backup settings
+- name: Configure ldap groups
   become: yes
-  artifactory_system_configuration:
+  artifactory_entity:
     domain: "{{ artifactory_api_domain }}"
+    entity_type: "groups"
     username: "{{ admin_username }}"
     password: "{{ admin_password }}"
-    config_type: "backups"
-    data:
-      backups: "{{ backups }}"
+    data: "{{ item }}"
     state: present
+  with_items: "{{ ldapGroups }}"
 
 - name: configure local repositories
   become: yes
@@ -222,3 +219,28 @@
     data: "{{ item }}"
     state: present
   with_items: "{{ virtualRepositories }}"
+
+- name: Configure permissions
+  become: yes
+  artifactory_entity:
+    domain: "{{ artifactory_api_domain }}"
+    entity_type: "permissions"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    data: "{{ item }}"
+    state: present
+  with_items: "{{ permissions }}"
+
+- name: include backup vars_files
+  include_vars: backup.yml
+
+- name: configure backup settings
+  become: yes
+  artifactory_system_configuration:
+    domain: "{{ artifactory_api_domain }}"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    config_type: "backups"
+    data:
+      backups: "{{ backups }}"
+    state: present

@@ -140,3 +140,21 @@ virtualRepositories:
   - key: shakiel-rpm
     packageType: rpm
     repositories: [ "shakiel-rpm-local", "shakiel-rpm-remote" ]
+
+# Permissions
+# m=admin; d=delete; w=deploy; n=annotate; r=read; mxm=managedXrayMeta; x=distribute
+permissions:
+  - name: mathematicians-permissions
+    repositories:
+      - shakiel-alpine-local
+      - shakiel-alpine-remote
+    principals:
+      groups:
+        mathematicians: ["r", "d", "w", "m", "n"]
+  - name: scientists-permissions
+    repositories:
+      - shakiel-alpine-local
+      - shakiel-alpine-remote
+    principals:
+      groups:
+        mathematicians: ["r", "n"]

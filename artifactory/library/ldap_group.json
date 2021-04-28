@@ -1,0 +1,12 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://192.168.199.51:8082/artifactory",
+    "username": "admin",
+    "password": "artifactory",
+    "entity_type": "groups",
+    "data": {
+      "name": "mathematicians",
+      "realmAttributes": "ldapGroupName=mathematicians;groupsStrategy=STATIC;groupDn=ou=mathematicians,dc=example,dc=com"
+    }
+  }
+}

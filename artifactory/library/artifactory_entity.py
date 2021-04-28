@@ -184,6 +184,26 @@ ENTITY_DEFAULTS = {
         "enabledChefSupport": False,
         "cargoAnonymousAccess": False,
         "rclass": "virtual"
+    },
+    GROUP_TYPE: {
+        "name": "",
+        "description": "Description",
+        "autoJoin": False,
+        "realm": "ldap",
+        "realmAttributes": "",
+        "adminPrivileges": False,
+        "policyManager": False,
+        "watchManager": False,
+        "reportsManager": False
+    },
+    PERMISSION_TYPE: {
+        "name": "",
+        "includesPattern": "**",
+        "excludesPattern": "",
+        "repositories": [],
+        "principals": {
+            "groups": {}
+        }
     }
 }
 
@@ -408,12 +428,18 @@ class ArtifactoryApiService:
         path = None
         if self.is_repo_type():
             path = "/api/repositories/{}".format(self.data['key'])
+        if self.entity_type == GROUP_TYPE:
+            path = "/api/security/groups/{}".format(self.data['name'])
+        if self.entity_type == PERMISSION_TYPE:
+            path = "/api/security/permissions/{}".format(self.data['name'])
         return ArtifactoryApiRequest(self.domain, path, self.username, self.password)
 
     def create(self):
         return self.artifactory_api_request().put_entity(self.full_data())
 
     def update(self):
+        if self.entity_type == PERMISSION_TYPE:
+            return self.create()
         return self.artifactory_api_request().post_entity(self.full_data())
 
     def delete(self):
@@ -452,6 +478,23 @@ class ArtifactoryApiService:
         if self.is_repo_type() and data_copy["rclass"] == "remote":
             data_copy["description"] = "{} {}".format(data_copy["description"], "(local file cache)")
         other_data_copy = copy.deepcopy(other_data)
+
+        if self.entity_type == PERMISSION_TYPE:
+            data_copy['repositories'].sort()
+            other_data_copy['repositories'].sort()
+
+            if 'groups' in data_copy['principals'] and 'groups' in other_data_copy['principals']:
+                for i in data_copy['principals']['groups']:
+                    data_copy['principals']['groups'][i].sort()
+                for j in data_copy['principals']['groups']:
+                    other_data_copy['principals']['groups'][j].sort()
+
+            if 'users' in data_copy['principals'] and 'users' in other_data_copy['principals']:
+                for i in data_copy['principals']['users']:
+                    data_copy['principals']['users'][i].sort()
+                for j in data_copy['principals']['users']:
+                    other_data_copy['principals']['users'][j].sort()
+
         return data_copy == other_data_copy
 
 
@@ -475,7 +518,7 @@ def main():
     state = module.params['state']
 
     if entity_type in REPO_TYPES and 'key' not in data:
-        module.fail_json(msg="Key in data is mandatory for {}".format   (entity_type), changed=False)
+        module.fail_json(msg="Key in data is mandatory for {}".format(entity_type), changed=False)
 
     artifactory_api_service = ArtifactoryApiService(domain, entity_type, username, password, data, state)
     if artifactory_api_service.should_create():

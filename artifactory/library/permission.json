@@ -1,0 +1,23 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://192.168.199.51:8082/artifactory",
+    "username": "admin",
+    "password": "artifactory",
+    "entity_type": "permissions",
+    "data": {
+      "name": "scientists-permissions",
+      "repositories": [
+        "shakiel-alpine-local",
+        "shakiel-alpine-remote"
+      ],
+      "principals": {
+        "groups": {
+          "scientists": [
+            "r",
+            "n"
+          ]
+        }
+      }
+    }
+  }
+}

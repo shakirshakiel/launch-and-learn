@@ -24,3 +24,13 @@ ldapGroupSetting:
   descriptionAttribute: "description"
   strategy: "STATIC"
   enabledLdap: "prod-ldap"
+
+ldapGroups:
+  - name: "chemists"
+    realmAttributes: "ldapGroupName=chemists;groupsStrategy=STATIC;groupDn=ou=chemists,dc=example,dc=com"
+  - name: "italians"
+    realmAttributes: "ldapGroupName=italians;groupsStrategy=STATIC;groupDn=ou=italians,dc=example,dc=com"
+  - name: "mathematicians"
+    realmAttributes: "ldapGroupName=mathematicians;groupsStrategy=STATIC;groupDn=ou=mathematicians,dc=example,dc=com"
+  - name: "scientists"
+    realmAttributes: "ldapGroupName=scientists;groupsStrategy=STATIC;groupDn=ou=scientists,dc=example,dc=com"
