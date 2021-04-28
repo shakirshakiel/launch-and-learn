@@ -3,7 +3,7 @@ ldapSetting:
   enabled: "true"
   ldapUrl: "ldap://ldap.forumsys.com"
   search:
-    searchFilter: "(|(cn=*{0}*)(mail=*{0}))"
+    searchFilter: "(|(cn=*{0}*)(mail=*{0}*))"
     searchBase: "dc=example,dc=com"
     searchSubTree: "true"
     managerDn: "cn=read-only-admin,dc=example,dc=com"
