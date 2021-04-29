@@ -187,6 +187,17 @@
     state: present
   with_items: "{{ ldapGroups }}"
 
+- name: configure proxies
+  become: yes
+  artifactory_system_configuration:
+    domain: "{{ artifactory_api_domain }}"
+    username: "{{ admin_username }}"
+    password: "{{ admin_password }}"
+    config_type: "proxy"
+    data:
+      proxies: "{{ proxies }}"
+    state: present
+
 - name: configure local repositories
   become: yes
   artifactory_entity:

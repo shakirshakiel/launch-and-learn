@@ -42,54 +42,69 @@ remoteRepositories:
   - key: shakiel-alpine-remote
     packageType: alpine
     url: "http://dl-cdn.alpinelinux.org/alpine"
+    proxy: defaultProxy
   - key: shakiel-cocoapods-remote
     packageType: cocoapods
     url: "https://github.com/"
     podsSpecsRepoUrl: "https://github.com/CocoaPods/Specs"
     vcsGitProvider: "GITHUB"
     vcsType: GIT
+    proxy: defaultProxy
   - key: shakiel-conda-remote
     packageType: conda
     url: "https://repo.anaconda.com/pkgs/main"
+    proxy: defaultProxy
   - key: shakiel-cran-remote
     packageType: cran
     url: "https://cran.r-project.org/"
+    proxy: defaultProxy
   - key: shakiel-debian-remote
     packageType: debian
     url: "http://archive.ubuntu.com/ubuntu/"
+    proxy: defaultProxy
   - key: shakiel-docker-remote
     packageType: docker
     url: "https://registry-1.docker.io/"
+    proxy: defaultProxy
   - key: shakiel-gems-remote
     packageType: gems
     url: "https://rubygems.org/"
+    proxy: defaultProxy
   - key: shakiel-generic-remote
     packageType: generic
     url: "https://github.com"
+    proxy: defaultProxy
   - key: shakiel-gocenter
     packageType: go
     url: "https://gocenter.io/"
     vcsGitProvider: "ARTIFACTORY"
     vcsType: GIT
+    proxy: defaultProxy
   - key: shakiel-gradle-jcenter
     packageType: maven
     url: "https://jcenter.bintray.com"
+    proxy: defaultProxy
   - key: shakiel-chartcenter
     packageType: helm
     url: "https://repo.chartcenter.io/"
+    proxy: defaultProxy
   - key: shakiel-maven-jcenter
     packageType: maven
     url: "https://jcenter.bintray.com"
+    proxy: defaultProxy
   - key: shakiel-npm-remote
     packageType: npm
     url: "https://registry.npmjs.org"
+    proxy: defaultProxy
   - key: shakiel-pypi-remote
     packageType: pypi
     url: "https://files.pythonhosted.org"
     pyPIRegistryUrl: "https://pypi.org"
+    proxy: defaultProxy
   - key: shakiel-rpm-remote
     packageType: rpm
     url: "http://mirror.centos.org/centos/"
+    proxy: defaultProxy
 
 virtualRepositories:
   - key: shakiel-alpine
@@ -158,3 +173,9 @@ permissions:
     principals:
       groups:
         mathematicians: ["r", "n"]
+
+proxies:
+  - key: "defaultProxy"
+    host: "proxy.shakiel.com"
+    port: "8080"
+    platformDefault: "true"

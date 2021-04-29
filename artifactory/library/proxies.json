@@ -1,0 +1,19 @@
+{
+  "ANSIBLE_MODULE_ARGS": {
+    "domain": "http://192.168.199.51:8082/artifactory",
+    "username": "admin",
+    "password": "artifactory",
+    "data": {
+      "proxies": [
+        {
+          "key": "defaultProxy",
+          "host": "proxy2.shakiel.com",
+          "port": "8080",
+          "platformDefault": "true"
+        }
+      ]
+    },
+    "config_type": "proxy",
+    "state": "present"
+  }
+}

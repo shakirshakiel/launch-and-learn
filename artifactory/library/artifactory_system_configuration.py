@@ -178,12 +178,70 @@ class ArtifactoryBackupApiService:
         }
         return self.artifactory_api_request().patch_entity(yaml.dump(data))
 
+class ArtifactoryProxyApiService:
+
+    def __init__(self, domain, username, password, data, state):
+        self.domain = domain
+        self.username = username
+        self.password = password
+        self.data = data
+        self.state = state
+
+    def artifactory_api_request(self):
+        return ArtifactoryApiRequest(self.domain, self.username, self.password)
+
+    def get_proxy_configs(self):
+        entity = self.artifactory_api_request().get_entity()
+        xml = xmltodict.parse(entity.content)
+        proxies = json.loads(json.dumps(xml['config']['proxies']))
+        return proxies
+
+    def is_data_same(self, remote_data, local_data):
+        remote_data_copy = copy.deepcopy(remote_data)
+        if isinstance(remote_data_copy, dict):
+            remote_data_copy = [remote_data_copy]
+
+        local_data_copy = copy.deepcopy(local_data)
+        return local_data_copy == remote_data_copy
+
+    def should_update(self):
+        if self.state == "absent":
+            return False
+        proxies = self.get_proxy_configs()
+        if proxies is not None and \
+                'proxy' in proxies and \
+                self.is_data_same(proxies['proxy'], self.data['proxies']):
+            return False
+        return True
+
+    def should_delete(self):
+        proxies = self.get_proxy_configs()
+        if self.state == "absent" and proxies is not None and 'proxy' in proxies and len(proxies['proxy']) > 0:
+            return True
+        return False
+
+    def update(self):
+        other_data = copy.deepcopy(self.data)
+        proxy_data = other_data['proxies']
+        data = {"proxies": {}}
+        for i in proxy_data:
+            proxy_name = i.pop('key')
+            data["proxies"][proxy_name] = i
+        return self.artifactory_api_request().patch_entity(yaml.dump(data))
+
+    def delete(self):
+        data = {
+            "proxies": None
+        }
+        return self.artifactory_api_request().patch_entity(yaml.dump(data))
+
+
 def main():
     fields = dict(
         domain=dict(required=True, type="str"),
         username=dict(required=True, type="str"),
         password=dict(required=True, type="str", no_log=True),
-        config_type=dict(required=True, type="str", choices=['ldap', 'backups']),
+        config_type=dict(required=True, type="str", choices=['ldap', 'backups', 'proxy']),
         data=dict(required=True, type="dict"),
         state=dict(required=False, type="str", default='present', choices=['absent', 'present']),
     )
@@ -208,6 +266,9 @@ def main():
         if 'backups' not in data:
             module.fail_json(msg="backups in data is mandatory", changed=False)
         artifactory_api_service = ArtifactoryBackupApiService(domain, username, password, data, state)
+
+    if config_type == "proxy":
+        artifactory_api_service = ArtifactoryProxyApiService(domain, username, password, data, state)
 
     if artifactory_api_service.should_update():
         if module.check_mode:

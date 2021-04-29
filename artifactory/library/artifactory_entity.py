@@ -94,6 +94,7 @@ ENTITY_DEFAULTS = {
         "url": "",
         "username": "",
         "password": "",
+        "proxy": "defaultProxy",
         "handleReleases": True,
         "handleSnapshots": True,
         "suppressPomConsistencyChecks": True,
