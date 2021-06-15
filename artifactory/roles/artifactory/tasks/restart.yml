@@ -13,6 +13,6 @@
     url: http://127.0.0.1:8082/router/api/v1/system/health
     status_code: 200
   register: result
-  until: "(result.status == 200) and (result.json | json_query('services[*].state') | unique == ['HEALTHY'])"
+  until: "(result.status == 200) and (result.json | server_healthy)"
   retries: 10
   delay: 5

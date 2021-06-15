@@ -7,3 +7,5 @@ roles/artifactory/files/artifactory.lic
 library/repository_jsons
 library/__pycache__/
 library/.pytest_cache
+roles/artifactory/filter_plugins/__pycache__/
+roles/artifactory/filter_plugins/test/__pycache__/

@@ -46,7 +46,6 @@
   become: yes
   package:
     name:
-      - python2-jmespath
       - python-requests
       - python-xmltodict
       - python-yaml

@@ -60,7 +60,7 @@ ENTITY_DEFAULTS = {
         "cargoAnonymousAccess": False,
         "downloadRedirect": False,
         "cdnRedirect": False,
-        "enabledChefSupport": False,
+        "enableChefSupport": False,
         "rclass": "local"
     },
     REMOTE_REPOSITORY_TYPE: {
@@ -142,7 +142,7 @@ ENTITY_DEFAULTS = {
         "cargoAnonymousAccess": False,
         "downloadRedirect": False,
         "cdnRedirect": False,
-        "enabledChefSupport": False,
+        "enableChefSupport": False,
         "rclass": "remote"
     },
     VIRTUAL_REPOSITORY_TYPE: {
@@ -181,7 +181,7 @@ ENTITY_DEFAULTS = {
         "virtualRetrievalCachePeriodSecs": 7200,
         "forceMavenAuthentication": False,
         "debianDefaultArchitectures": "i386,amd64",
-        "enabledChefSupport": False,
+        "enableChefSupport": False,
         "cargoAnonymousAccess": False,
         "rclass": "virtual"
     },
