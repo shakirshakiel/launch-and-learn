@@ -104,7 +104,7 @@
   become: yes
   package:
     name:
-      - jfrog-artifactory-pro-7.18.3-71803900
+      - jfrog-artifactory-pro-7.19.8-71908900
     state: present
 
 - name: Copy master key
@@ -242,16 +242,17 @@
     state: present
   with_items: "{{ permissions }}"
 
-- name: include backup vars_files
-  include_vars: backup.yml
-
-- name: configure backup settings
-  become: yes
-  artifactory_system_configuration:
-    domain: "{{ artifactory_api_domain }}"
-    username: "{{ admin_username }}"
-    password: "{{ admin_password }}"
-    config_type: "backups"
-    data:
-      backups: "{{ backups }}"
-    state: present
+# https://www.jfrog.com/jira/browse/RTFACT-16452
+#- name: include backup vars_files
+#  include_vars: backup.yml
+#
+#- name: configure backup settings
+#  become: yes
+#  artifactory_system_configuration:
+#    domain: "{{ artifactory_api_domain }}"
+#    username: "{{ admin_username }}"
+#    password: "{{ admin_password }}"
+#    config_type: "backups"
+#    data:
+#      backups: "{{ backups }}"
+#    state: present

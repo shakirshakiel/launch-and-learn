@@ -5,3 +5,5 @@
 vagrant-cache/tmp
 roles/artifactory/files/artifactory.lic
 library/repository_jsons
+library/__pycache__/
+library/.pytest_cache

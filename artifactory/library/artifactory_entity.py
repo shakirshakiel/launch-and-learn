@@ -4,7 +4,6 @@ from ansible.module_utils.basic import *
 import json
 import requests
 import copy
-import pdb
 
 LOCAL_REPOSITORY_TYPE = "local_repository"
 REMOTE_REPOSITORY_TYPE = "remote_repository"
@@ -395,8 +394,10 @@ class ArtifactoryApiRequest:
         return result
 
     def url(self):
-        url = "{}{}".format(self.domain, self.path)
-        return url
+        domain = self.domain[:-1] if self.domain.endswith("/") else self.domain
+        path = self.path[1:] if self.path.startswith("/") else self.path
+
+        return "{}/{}".format(domain, path)
 
     def basic_params(self):
         params = dict()
@@ -476,7 +477,7 @@ class ArtifactoryApiService:
 
     def is_data_same(self, other_data):
         data_copy = self.full_data()
-        if self.is_repo_type() and data_copy["rclass"] == "remote":
+        if self.is_repo_type() and "rclass" in data_copy and data_copy["rclass"] == "remote":
             data_copy["description"] = "{} {}".format(data_copy["description"], "(local file cache)")
         other_data_copy = copy.deepcopy(other_data)
 
@@ -489,13 +490,6 @@ class ArtifactoryApiService:
                     data_copy['principals']['groups'][i].sort()
                 for j in data_copy['principals']['groups']:
                     other_data_copy['principals']['groups'][j].sort()
-
-            if 'users' in data_copy['principals'] and 'users' in other_data_copy['principals']:
-                for i in data_copy['principals']['users']:
-                    data_copy['principals']['users'][i].sort()
-                for j in data_copy['principals']['users']:
-                    other_data_copy['principals']['users'][j].sort()
-
         return data_copy == other_data_copy
 
 

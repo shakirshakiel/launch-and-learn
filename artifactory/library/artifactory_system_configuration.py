@@ -4,7 +4,6 @@ from ansible.module_utils.basic import *
 import json
 import requests
 import copy
-import pdb
 import xmltodict
 import yaml
 
@@ -33,8 +32,8 @@ class ArtifactoryApiRequest:
         return result
 
     def url(self):
-        url = "{}{}".format(self.domain, "/api/system/configuration")
-        return url
+        domain = self.domain[:-1] if self.domain.endswith("/") else self.domain
+        return "{}/{}".format(domain, "api/system/configuration")
 
     def basic_params(self):
         params = dict()
@@ -108,83 +107,13 @@ class ArtifactoryLdapApiService:
         }
         return self.artifactory_api_request().patch_entity(yaml.dump(data))
 
-class ArtifactoryBackupApiService:
-
-    def __init__(self, domain, username, password, data, state):
-        self.domain = domain
-        self.username = username
-        self.password = password
-        self.data = data
-        self.state = state
-
-    def artifactory_api_request(self):
-        return ArtifactoryApiRequest(self.domain, self.username, self.password)
-
-    def get_backup_configs(self):
-        entity = self.artifactory_api_request().get_entity()
-        xml = xmltodict.parse(entity.content)
-        backups = json.loads(json.dumps(xml['config']['backups']))
-        return backups
-
-    def is_data_same(self, remote_data, local_data):
-        if len(remote_data) != len(local_data):
-            return False
-
-        remote_data_copy = copy.deepcopy(remote_data)
-        local_data_copy = copy.deepcopy(local_data)
-        sorter = lambda x: x.get('key')
-        remote_data_copy.sort(key=sorter)
-        local_data_copy.sort(key=sorter)
-
-        for item in remote_data_copy:
-            if item['excludedRepositories'] is not None:
-                item['excludedRepositories'] = item['excludedRepositories']['repositoryRef']
-                item['excludedRepositories'].sort()
-
-        for item in local_data_copy:
-            if item['excludedRepositories'] is not None:
-                item['excludedRepositories'].sort()
-
-        return local_data_copy == remote_data_copy
-
-    def should_update(self):
-        if self.state == "absent":
-            return False
-        backups = self.get_backup_configs()
-        if backups is not None and \
-                'backup' in backups and \
-                self.is_data_same(backups['backup'], self.data['backups']):
-            return False
-        return True
-
-    def should_delete(self):
-        backups = self.get_backup_configs()
-        if self.state == "absent" and 'backup' in backups and len(backups['backup']) > 0:
-            return True
-        return False
-
-    def update(self):
-        other_data = copy.deepcopy(self.data)
-        backups_data = other_data['backups']
-        data = {"backups": {}}
-        for i in backups_data:
-            backup_name = i.pop('key')
-            data["backups"][backup_name] = i
-        return self.artifactory_api_request().patch_entity(yaml.dump(data))
-
-    def delete(self):
-        data = {
-            "backups": None
-        }
-        return self.artifactory_api_request().patch_entity(yaml.dump(data))
-
 class ArtifactoryProxyApiService:
 
-    def __init__(self, domain, username, password, data, state):
+    def __init__(self, domain, username, password, proxies, state):
         self.domain = domain
         self.username = username
         self.password = password
-        self.data = data
+        self.proxies = proxies
         self.state = state
 
     def artifactory_api_request(self):
@@ -193,38 +122,33 @@ class ArtifactoryProxyApiService:
     def get_proxy_configs(self):
         entity = self.artifactory_api_request().get_entity()
         xml = xmltodict.parse(entity.content)
+
         proxies = json.loads(json.dumps(xml['config']['proxies']))
+        if proxies is None or 'proxy' not in proxies:
+            return None
+
+        if isinstance(proxies['proxy'], dict):
+            proxies['proxy'] = [proxies['proxy']]
         return proxies
-
-    def is_data_same(self, remote_data, local_data):
-        remote_data_copy = copy.deepcopy(remote_data)
-        if isinstance(remote_data_copy, dict):
-            remote_data_copy = [remote_data_copy]
-
-        local_data_copy = copy.deepcopy(local_data)
-        return local_data_copy == remote_data_copy
 
     def should_update(self):
         if self.state == "absent":
             return False
         proxies = self.get_proxy_configs()
-        if proxies is not None and \
-                'proxy' in proxies and \
-                self.is_data_same(proxies['proxy'], self.data['proxies']):
+        if proxies is not None and proxies['proxy'] == self.proxies:
             return False
         return True
 
     def should_delete(self):
         proxies = self.get_proxy_configs()
-        if self.state == "absent" and proxies is not None and 'proxy' in proxies and len(proxies['proxy']) > 0:
+        if self.state == "absent" and proxies is not None and len(proxies['proxy']) > 0:
             return True
         return False
 
     def update(self):
-        other_data = copy.deepcopy(self.data)
-        proxy_data = other_data['proxies']
+        other_data = copy.deepcopy(self.proxies)
         data = {"proxies": {}}
-        for i in proxy_data:
+        for i in other_data:
             proxy_name = i.pop('key')
             data["proxies"][proxy_name] = i
         return self.artifactory_api_request().patch_entity(yaml.dump(data))
@@ -241,7 +165,7 @@ def main():
         domain=dict(required=True, type="str"),
         username=dict(required=True, type="str"),
         password=dict(required=True, type="str", no_log=True),
-        config_type=dict(required=True, type="str", choices=['ldap', 'backups', 'proxy']),
+        config_type=dict(required=True, type="str", choices=['ldap', 'proxy']),
         data=dict(required=True, type="dict"),
         state=dict(required=False, type="str", default='present', choices=['absent', 'present']),
     )
@@ -262,13 +186,10 @@ def main():
             module.fail_json(msg="ldapSetting and ldapGroupSetting in data are mandatory", changed=False)
         artifactory_api_service = ArtifactoryLdapApiService(domain, username, password, data['ldapSetting'], data['ldapGroupSetting'], state)
 
-    if config_type == 'backups':
-        if 'backups' not in data:
-            module.fail_json(msg="backups in data is mandatory", changed=False)
-        artifactory_api_service = ArtifactoryBackupApiService(domain, username, password, data, state)
-
     if config_type == "proxy":
-        artifactory_api_service = ArtifactoryProxyApiService(domain, username, password, data, state)
+        if 'proxies' not in data:
+            module.fail_json(msg="proxies in data is mandatory", changed=False)
+        artifactory_api_service = ArtifactoryProxyApiService(domain, username, password, data['proxies'], state)
 
     if artifactory_api_service.should_update():
         if module.check_mode:
