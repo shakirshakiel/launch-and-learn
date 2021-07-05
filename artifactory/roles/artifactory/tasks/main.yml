@@ -36,19 +36,18 @@
     group: root
     mode: '0444'
 
-- name: Enable epel
-  become: yes
-  package:
-    name:
-      - epel-release
-
 - name: Install required packages
   become: yes
   package:
     name:
       - python-requests
-      - python-xmltodict
       - python-yaml
+
+- name: Install xmltodict package via rpm
+  become: yes
+  package:
+    name: https://download-ib01.fedoraproject.org/pub/epel/7/aarch64/Packages/p/python-xmltodict-0.9.0-1.el7.noarch.rpm
+    state: present
 
 - name: Create jfrog directories
   become: yes
@@ -103,7 +102,7 @@
   become: yes
   package:
     name:
-      - jfrog-artifactory-pro-7.19.8-71908900
+      - jfrog-artifactory-pro-7.19.9-71909900
     state: present
 
 - name: Copy master key
