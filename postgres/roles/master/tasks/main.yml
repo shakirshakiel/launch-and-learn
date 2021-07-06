@@ -14,30 +14,30 @@
     name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
     state: present
 
-- name: Install postgres 12
+- name: Install postgres 13
   become: yes
   package:
     name:
-      - postgresql12-server
-      - postgresql12-contrib
+      - postgresql13-server
+      - postgresql13-contrib
       - python-psycopg2
     state: present
 
 - name: Check if postgres is already installed
   become: yes
   stat:
-    path: "/var/lib/pgsql/12/data/PG_VERSION"
+    path: "/var/lib/pgsql/13/data/PG_VERSION"
   register: db_initialized
 
 - name: Initialize postgres db
   become: yes
-  command: /usr/pgsql-12/bin/postgresql-12-setup initdb
+  command: /usr/pgsql-13/bin/postgresql-13-setup initdb
   when: not db_initialized.stat.exists
 
 - name: Create archive directory
   become: yes
   file:
-    path: /var/lib/pgsql/12/archive
+    path: /var/lib/pgsql/13/archive
     mode: 0700
     owner: postgres
     group: postgres
@@ -46,7 +46,7 @@
 - name: Configure postgresql.conf
   become: yes
   blockinfile:
-    path: /var/lib/pgsql/12/data/postgresql.conf
+    path: /var/lib/pgsql/13/data/postgresql.conf
     marker: "# {mark} Added by ansible ---"
     insertbefore: 'EOF'
     block: |
@@ -54,26 +54,27 @@
       wal_level = 'hot_standby'
       synchronous_commit = 'local'
       archive_mode = 'on'
-      archive_command = 'cp %p /var/lib/pgsql/12/archive/%f'
-      max_wal_senders = 2
-      wal_keep_segments = 2
+      archive_command = 'cp %p /var/lib/pgsql/13/archive/%f'
+      max_wal_senders = 10
+      wal_keep_size = '1GB'
+      wal_compression = 'on'
       synchronous_standby_names = 'slave01'
 
 - name: Configure pg_hba.conf
   become: yes
   blockinfile:
-    path: /var/lib/pgsql/12/data/pg_hba.conf
+    path: /var/lib/pgsql/13/data/pg_hba.conf
     marker: "# {mark} Added by ansible ---"
     insertbefore: 'EOF'
     block: |
       host replication replica 127.0.0.1/32 md5
-      host replication replica 192.168.199.31/32 md5
-      host replication replica 192.168.199.32/32 md5
+      host replication replica {{ hostvars['master']['ansible_host'] }}/32 md5
+      host replication replica {{ hostvars['slave']['ansible_host'] }}/32 md5
 
 - name: Start postgres server
   become: yes
   service:
-    name: postgresql-12
+    name: postgresql-13
     enabled: yes
     state: started
 
@@ -89,3 +90,10 @@
     name: "replica"
     password: "replica"
     role_attr_flags: "REPLICATION,LOGIN"
+
+- name: Create physical slot if doesn't exist
+  become: yes
+  become_user: postgres
+  postgresql_slot:
+    slot_name: slave01
+    slot_type: physical

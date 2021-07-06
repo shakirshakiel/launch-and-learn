@@ -14,32 +14,32 @@
     name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
     state: present
 
-- name: Install postgres 12
+- name: Install postgres 13
   become: yes
   package:
     name:
-      - postgresql12-server
-      - postgresql12-contrib
+      - postgresql13-server
+      - postgresql13-contrib
       - python-psycopg2
     state: present
 
 - name: Check if hot-standby is configured
   become: yes
   stat:
-    path: "/var/lib/pgsql/12/data/standby.signal"
+    path: "/var/lib/pgsql/13/data/standby.signal"
   register: standby
 
 - name: Remove existing data directory
   become: yes
   file:
-    path: /var/lib/pgsql/12/data
+    path: /var/lib/pgsql/13/data
     state: absent
   when: not standby.stat.exists
 
 - name: Create data directory
   become: yes
   file:
-    path: /var/lib/pgsql/12/data
+    path: /var/lib/pgsql/13/data
     mode: 0700
     owner: postgres
     group: postgres
@@ -48,13 +48,24 @@
 - name: Initialize hot-standby
   become: yes
   become_user: postgres
-  shell: "PGPASSWORD=replica pg_basebackup -h 192.168.199.32 -U replica -D /var/lib/pgsql/12/data -Fp -Xs -P -R"
+  shell: "PGPASSWORD=replica pg_basebackup -h {{ hostvars['master']['ansible_host'] }} -U replica -D /var/lib/pgsql/13/data -Fp -Xs -P -R"
   when: not standby.stat.exists
+
+- name: Configure postgresql.conf
+  become: yes
+  blockinfile:
+    path: /var/lib/pgsql/13/data/postgresql.conf
+    marker: "# {mark} Added by ansible ---"
+    insertbefore: 'EOF'
+    block: |
+      primary_conninfo = 'host={{ hostvars['master']['ansible_host'] }} port=5432 user=replica password=replica'
+      primary_slot_name = 'slave01'
+      promote_trigger_file = '/var/lib/pgsql/13/data/promote'
 
 - name: Start postgres server
   become: yes
   service:
-    name: postgresql-12
+    name: postgresql-13
     enabled: yes
     state: started
 
