@@ -22,7 +22,7 @@
   package:
     name: 
       - git
-      - go-agent-20.7.0-12097
+      - go-agent-22.1.0-13913
       - epel-release
 
 - name: Install jq

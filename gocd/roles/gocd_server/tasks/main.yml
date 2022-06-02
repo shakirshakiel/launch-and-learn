@@ -71,7 +71,7 @@
       - python-requests
       - python-passlib
       - httpd-tools
-      - go-server-20.7.0-12097
+      - go-server-22.1.0-13913
 
 - name: Update wrapper-config
   become: yes
